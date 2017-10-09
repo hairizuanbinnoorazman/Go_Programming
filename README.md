@@ -31,3 +31,8 @@ Run the command to run the go file without running a compile step
 ```bash
 go run hw.go
 ```
+
+Run the command to run check documentation
+```bash
+go doc strconv Atoi
+```
