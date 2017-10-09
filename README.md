@@ -26,3 +26,8 @@ go build hw.go
 # To run the executable
 ./hw
 ```
+
+Run the command to run the go file without running a compile step
+```bash
+go run hw.go
+```
