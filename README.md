@@ -36,3 +36,8 @@ Run the command to run check documentation
 ```bash
 go doc strconv Atoi
 ```
+
+Run a local webserver to look at web based documentation 
+```bash
+godoc -http=:8080
+```
