@@ -1,3 +1,8 @@
+/*
+This example is for understanding how to set up parameters for
+command line arguments
+*/
+
 package main
 
 import (

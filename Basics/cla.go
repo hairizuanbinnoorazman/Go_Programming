@@ -1,3 +1,7 @@
+/*
+The most basic of Go examples
+*/
+
 package main
 
 import "fmt"

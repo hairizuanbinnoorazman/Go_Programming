@@ -1,3 +1,8 @@
+/*
+This example is for understanding how to do convert and clean data input on
+command line utilities
+*/
+
 package main
 
 import (

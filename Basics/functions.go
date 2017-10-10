@@ -1,3 +1,7 @@
+/*
+Writing up functions in Go
+*/
+
 package main
 
 import (
