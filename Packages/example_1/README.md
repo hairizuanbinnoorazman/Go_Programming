@@ -44,4 +44,5 @@ It will create 2 binary executables in the bin folder. hello and meh.
 
 ### Learnings on miao package?
 
-- If you define a interface in the package, it will be available everywhere in the whole package
+- If you define a interface in the package, it will be available everywhere in the whole package but not across package
+- A package is defined as everything in the folder (also defined by the package by the value at the top)
