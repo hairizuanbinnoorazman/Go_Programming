@@ -41,3 +41,35 @@ Run a local webserver to look at web based documentation
 ```bash
 godoc -http=:8080
 ```
+
+## Go Code Principles
+
+- be articulate, concise.
+- provide a simple API.
+- have precise comments.
+- be readable, **top-down code.**
+
+
+## Go Anti patterns
+
+- https://about.sourcegraph.com/go/idiomatic-go/
+
+Please don't do the following:
+- Tiny packages
+- Premature Exportation (As much as possible don't expose too much of your code. This keeps the package simple and easy to understand.)
+- Package util (Seriously don't do this. What is util supposed to do? It doesn't enhance readability etc)
+- Config structs (Massive data structures that fly around. Making tracing hard. It makes the developer have to work hard to understand the code)
+- Pointer all things? (Bad idea. It might be good for performance but measure before implementing it)
+- No no to context.Value
+- Dont panic for code in libraries
+- No to blank interface{} (Why would you hide your implementation. It makes it harder to read. Instead, look around to see if there is any interface that you can potential use. Or create your own, but it has to be homegrown though)
+
+
+
+## Other Resources
+
+- https://talks.golang.org/2014/readability.slide
+- https://golang.org/doc/effective_go.html
+- https://github.com/golang/go/wiki/CodeReviewComments#Package_Comments
+
+
