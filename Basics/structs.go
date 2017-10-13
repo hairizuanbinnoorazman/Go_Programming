@@ -8,6 +8,10 @@ Learnings:
 - There is no "this" keyword. This is replace by p in `func (p *Person) lol() {...}`
 - You are passing the values around by reference - for python is self, for plenty of other languages, its this
 - By put the (p *Person) in front of the function, you are kind of saying that this function belongs to this "struct"/object
+
+Additional Learnings (From working on private and public - exported vs non-exported stuff in Go)
+- If you are working in the same 'package', you can denote it as a small characters to denote that it is not to be exported.
+- The struct will only appear within the package.
 */
 
 package main
@@ -18,7 +22,7 @@ import (
 )
 
 type Person struct {
-	Name string
+	name string
 	Address Address
 }
 
@@ -32,7 +36,7 @@ type Address struct {
 }
 
 func (p *Person) Talk() {
-	fmt.Println("Hi, my name is", p.Name)
+	fmt.Println("Hi, my name is", p.name)
 }
 
 func (p *Person) Location() {
@@ -51,7 +55,7 @@ func (p *Person) FullDetails() {
 
 func main() {
 	p  := Person{
-		Name: "Steve",
+		name: "Steve",
 		Address: Address{
 			Number: "13",
 			Street: "Main",
