@@ -15,6 +15,7 @@ Learnings:
   - Coupling (Change a base class and there is a change that changes need to be replicated downwards)
 - It is possible to use un-capitalized keys in the structs. However, uncapitalized kind of mean private in go land and capitalized
   means public and can be exported.
+  *A good point to note is that as much as possible, if you don't intend to reuse structs etc, keep them private.
 */
 
 package main
