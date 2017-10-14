@@ -51,7 +51,7 @@ func helloWorldHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var request helloWorldRequest
-	err = json.Unmarshall(body, &request)
+	err = json.Unmarshal(body, &request)
 	if err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
