@@ -1,5 +1,8 @@
 // Example of using Go to ping Slack
 // This would ping a message by the text message passed via postMessage function
+//
+// In order to utilize this file, use the command: go run slack_example.go
+// Else, generate a binary file by running the command: go build slack_example.go
 
 package main
 
