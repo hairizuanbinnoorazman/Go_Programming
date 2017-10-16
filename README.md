@@ -73,5 +73,11 @@ Please don't do the following:
 - https://github.com/golang/go/wiki/CodeReviewComments#Package_Comments
 - https://ahmet.im/blog/golang-json-decoder-pitfalls/ (Some resources for some damn reason use the encoder/decoder)
 - https://medium.com/@matryer/the-http-handler-wrapper-technique-in-golang-updated-bc7fbcffa702
+- https://godoc.org/golang.org/x/tools/cmd
+
+Program your next server in Go (Sameer Ajmani)
+- https://www.youtube.com/watch?v=5bYO60-qYOI
+- https://talks.golang.org/2016/applicative.slide#1
+- https://github.com/golang/talks
 
 
