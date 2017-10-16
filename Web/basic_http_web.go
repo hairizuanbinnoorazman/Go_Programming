@@ -32,5 +32,6 @@ func main() {
 }
 
 func helloWorldHandler(w http.ResponseWriter, r *http.Request){
+	log.Println("serving", req.URL)
 	fmt.Fprint(w, "Hello World!!\n")
 }
