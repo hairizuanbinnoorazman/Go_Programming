@@ -7,6 +7,7 @@ import (
 )
 
 func main() {
+	// Test with a website that contains japanese
 	res, err := http.Get("http://www.jpf.go.jp/")
 	if err != nil {
 		fmt.Println(err.Error())
