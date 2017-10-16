@@ -71,7 +71,7 @@ Please don't do the following:
 - https://talks.golang.org/2014/readability.slide
 - https://golang.org/doc/effective_go.html
 - https://github.com/golang/go/wiki/CodeReviewComments#Package_Comments
-- https://ahmet.im/blog/golang-json-decoder-pitfalls/ (Some resources for some damn reason use the encoder/decoder)
+- https://ahmet.im/blog/golang-json-decoder-pitfalls/ (Some resources, for some weird reason use the encoder/decoder rather marshal/unmarshal)
 - https://medium.com/@matryer/the-http-handler-wrapper-technique-in-golang-updated-bc7fbcffa702
 - https://godoc.org/golang.org/x/tools/cmd
 
