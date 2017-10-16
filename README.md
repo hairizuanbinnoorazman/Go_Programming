@@ -1,6 +1,6 @@
 ## Programming with Go
 
-Code code snippets with go code
+Code snippets with go code
 
 ## List of useful commands
 
