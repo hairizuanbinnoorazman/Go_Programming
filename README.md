@@ -72,6 +72,7 @@ Random advice that makes sense:
 - Do not test system software created via Go on production environment
 - If you really need to run some go command line in production, make sure you have some sort of backup plan (in case sth catches fire)
 - For functions, pass in interfaces but output structs. This would allow one to be explicit in what functions the person would need - e.g. I need a addAll() function and a removeAll() function to be created. Mantra: Accept native + interfaces but return structs
+- Don't ever use the global variables unless you're thinking of commiting suicide via variable tracing - reason for not doing is that the variable can be manipulated by any function within the package which makes it really really dangerous
 
 
 
