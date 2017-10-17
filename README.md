@@ -65,6 +65,15 @@ Please don't do the following:
 - No to blank interface{} (Why would you hide your implementation. It makes it harder to read. Instead, look around to see if there is any interface that you can potential use. Or create your own, but it has to be homegrown though)
 
 
+## Random Advice
+
+Random advice that makes sense:
+
+- Do not test system software created via Go on production environment
+- If you really need to run some go command line in production, make sure you have some sort of backup plan (in case sth catches fire)
+- For functions, pass in interfaces but output structs. This would allow one to be explicit in what functions the person would need - e.g. I need a addAll() function and a removeAll() function to be created. Mantra: Accept native + interfaces but return structs
+
+
 
 ## Other Resources
 
