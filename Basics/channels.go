@@ -1,3 +1,13 @@
+/*
+	Some learnings:
+
+	To write a infinite loop, use a for {}.
+	There seems to be no more while loops?
+
+	In order to make a random sleeper -> Convert to type accordingly.
+	Convert int to Duration and then multiply it to the time.Second to properly get the time value
+*/
+
 package main
 
 import (
