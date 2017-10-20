@@ -8,6 +8,10 @@ Output:
 2 1 0
 3 3 3
 2 1 0
+
+Fyi:
+Add another quick test to see how many defer statements can be put into a function. Multiple defer statements can be added
+but it goes in reverse order -> Like in a stack.
 */
 
 package main
@@ -37,6 +41,13 @@ func a3() {
 	}
 }
 
+func a4() {
+	defer fmt.Println("a4 test 1")
+	defer fmt.Println("a4 test 2")
+	defer fmt.Println("a4 test 3")
+	defer fmt.Println("a4 test 4")
+}
+
 func main(){
 	a1()
 	fmt.Println()
@@ -44,4 +55,5 @@ func main(){
 	fmt.Println()
 	a3()
 	fmt.Println()
+	a4()
 }
