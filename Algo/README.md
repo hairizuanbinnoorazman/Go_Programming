@@ -1,3 +1,3 @@
 # Implmenting algorithms
 
-Implementation of algorithms in Golang
+Implementation of algorithms, data structures and other exercises in Golang
