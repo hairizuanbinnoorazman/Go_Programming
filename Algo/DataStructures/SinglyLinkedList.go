@@ -49,10 +49,29 @@ func (l *List) Print() {
 	fmt.Println(nodeWalk.Value)
 }
 
+func (l *List) Len() int {
+	nodeWalk := l.Root
+	if nodeWalk == nil {
+		return 0
+	}
+	count := 1
+	for nodeWalk.Next != nil {
+		count = count + 1
+		nodeWalk = nodeWalk.Next
+	}
+	return count
+}
+
 func main() {
 	aa := Init(Node{Value: "caca"})
 	bb := Node{Value: "akcnjkanclk"}
-	// cc := Node{Value: "kmackmcklamkkmslc"}
+	cc := Node{Value: "kmackmcklamkkmslc"}
 	aa = aa.Append(bb)
+	aa = aa.Append(cc)
 	aa.Print()
+	fmt.Println(aa.Len())
+
+	zz := Init(Node{Value: "kanjkca"})
+	zz.Print()
+	fmt.Println(zz.Len())
 }
