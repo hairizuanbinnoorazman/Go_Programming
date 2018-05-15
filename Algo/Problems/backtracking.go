@@ -1,6 +1,13 @@
 /*
 This is a basic backtracking algorithm
 
+Problem here is to list all permuates of 3 letters from an array of
+"A", "B", "C", "D"
+
+Mathematically, it can be represented as the following:
+4P3
+
+There should be 24 permutations
 */
 
 package main
