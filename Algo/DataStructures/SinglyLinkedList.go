@@ -62,6 +62,17 @@ func (l *List) Len() int {
 	return count
 }
 
+func (l *List) Search(val string) *Node {
+	nodeWalk := l.Root
+	for nodeWalk.Next != nil {
+		if nodeWalk.Value == val {
+			return nodeWalk
+		}
+		nodeWalk = nodeWalk.Next
+	}
+	return nil
+}
+
 func main() {
 	aa := Init(Node{Value: "caca"})
 	bb := Node{Value: "akcnjkanclk"}
@@ -74,4 +85,10 @@ func main() {
 	zz := Init(Node{Value: "kanjkca"})
 	zz.Print()
 	fmt.Println(zz.Len())
+
+	lol := aa.Search("caca")
+	fmt.Println(lol)
+	fmt.Println(lol.Next.Value)
+	lol2 := aa.Search("cacac")
+	fmt.Println(lol2)
 }
