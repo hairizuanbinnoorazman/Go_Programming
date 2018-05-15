@@ -10,7 +10,7 @@ Some of the operations that needs to be done
 6. Merging
 
 NOTE: There is already a implementation of linked list in the container package from the standard library
- */
+*/
 
 package main
 
@@ -18,44 +18,41 @@ import "fmt"
 
 type Node struct {
 	Value string
-	Next *Node
+	Next  *Node
 }
 
-// Append operation should only work at the end of the linked list
-func (n *Node) append(node *Node) {
-	for n.Next != nil {
-		n = n.Next
+type List struct {
+	Root *Node
+}
+
+func Init(val Node) *List {
+	return &List{
+		Root: &val,
 	}
-	n.Next = node
 }
 
-func (n *Node) print () {
-	for n.Next != nil {
-		fmt.Println(n.Value)
-		n = n.Next
+func (l *List) Append(val Node) *List {
+	nodeWalk := l.Root
+	for nodeWalk.Next != nil {
+		nodeWalk = nodeWalk.Next
 	}
-	fmt.Println(n.Value)
+	nodeWalk.Next = &val
+	return l
 }
 
-func (n *Node) length() int {
-	count :=  0
-	for n.Next != nil {
-		count = count + 1
-		n = n.Next
+func (l *List) Print() {
+	nodeWalk := l.Root
+	for nodeWalk.Next != nil {
+		fmt.Println(nodeWalk.Value)
+		nodeWalk = nodeWalk.Next
 	}
-	return count + 1
+	fmt.Println(nodeWalk.Value)
 }
-
-
 
 func main() {
-	first := Node{"a", nil}
-	second := Node{"b", nil}
-	third := Node{"c", nil}
-	first.append(&second)
-	first.append(&third)
-	first.print()
-	fmt.Println(first.length())
+	aa := Init(Node{Value: "caca"})
+	bb := Node{Value: "akcnjkanclk"}
+	// cc := Node{Value: "kmackmcklamkkmslc"}
+	aa = aa.Append(bb)
+	aa.Print()
 }
-
-
