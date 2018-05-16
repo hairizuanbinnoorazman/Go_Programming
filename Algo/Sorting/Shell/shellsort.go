@@ -26,3 +26,11 @@ After this would be the normal insertion sort across the whole array
 
 
 */
+
+package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("TODO: Shell sort")
+}
