@@ -1,0 +1,138 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    run: app
+  name: app
+  namespace: default
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        run: app
+    spec:
+      containers:
+        - image: gcr.io/expanded-league-162223/basicwithtracing:v3
+          imagePullPolicy: Always
+          name: app
+          env:
+            - name: WAIT_TIME
+              value: "2"
+            - name: TARGET
+              value: "MIAO"
+            - name: SERVICE_NAME
+              value: app
+            - name: CLIENT_URL
+              value: "http://app2:8080"
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    run: app2
+  name: app2
+  namespace: default
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        run: app2
+    spec:
+      containers:
+        - image: gcr.io/expanded-league-162223/basicwithtracing:v3
+          imagePullPolicy: Always
+          name: app2
+          env:
+            - name: WAIT_TIME
+              value: "1"
+            - name: TARGET
+              value: "MIAO"
+            - name: SERVICE_NAME
+              value: app2
+            - name: CLIENT_URL
+              value: "http://app3:8080"
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    run: app2
+  name: app2
+spec:
+  ports:
+    - port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    run: app2
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    run: app3
+  name: app3
+  namespace: default
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        run: app3
+    spec:
+      containers:
+        - image: gcr.io/expanded-league-162223/basicwithtracing:v3
+          imagePullPolicy: Always
+          name: app3
+          env:
+            - name: WAIT_TIME
+              value: "1"
+            - name: TARGET
+              value: "MIAO"
+            - name: SERVICE_NAME
+              value: app3
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    run: app3
+  name: app3
+spec:
+  ports:
+    - port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    run: app3
+  type: ClusterIP
