@@ -20,7 +20,7 @@ spec:
         run: app
     spec:
       containers:
-        - image: gcr.io/expanded-league-162223/basicwithtracing:v3
+        - image: gcr.io/<PROJECT_ID>/basicwithtracing:v3
           imagePullPolicy: Always
           name: app
           env:
@@ -57,7 +57,7 @@ spec:
         run: app2
     spec:
       containers:
-        - image: gcr.io/expanded-league-162223/basicwithtracing:v3
+        - image: gcr.io/<PROJECT_ID>/basicwithtracing:v3
           imagePullPolicy: Always
           name: app2
           env:
@@ -109,7 +109,7 @@ spec:
         run: app3
     spec:
       containers:
-        - image: gcr.io/expanded-league-162223/basicwithtracing:v3
+        - image: gcr.io/<PROJECT_ID>/basicwithtracing:v3
           imagePullPolicy: Always
           name: app3
           env:
