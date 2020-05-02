@@ -2,6 +2,8 @@
 
 This application serves as a test application that would to call the google compute api to list compute engine instances in a project
 
+Application calls the google compute engine and list all instances in a project every few seconds
+
 # Testing it out
 
 While on local computer, you can try to experiment to see if it is possible to just use the default application credentials provided by gcloud would be sufficient to run the program.
