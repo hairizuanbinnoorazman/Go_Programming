@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"time"
 
+	"go.opencensus.io/stats"
+
 	sd "github.com/TV4/logrus-stackdriver-formatter"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/genproto/googleapis/api/monitoredres"
@@ -16,11 +18,16 @@ import (
 	"contrib.go.opencensus.io/exporter/stackdriver"
 	"contrib.go.opencensus.io/exporter/stackdriver/propagation"
 	"go.opencensus.io/plugin/ochttp"
+	"go.opencensus.io/stats/view"
 	"go.opencensus.io/trace"
 )
 
 var ServiceName = "Basic-With-Stackdriver"
 var Version = "0.1.0"
+
+var (
+	requestCounter = stats.Int64("request_count", "Number of requests by path", stats.UnitDimensionless)
+)
 
 func main() {
 	logger := logrus.New()
@@ -31,6 +38,10 @@ func main() {
 	logger.Level = logrus.InfoLevel
 	logger.Info("Application Start Up")
 	defer logger.Info("Application Ended")
+
+	if err := view.Register(ochttp.DefaultServerViews...); err != nil {
+		log.Fatalf("Failed to register the view: %v", err)
+	}
 
 	// Create and register a OpenCensus Stackdriver Trace exporter.
 	exporter, err := stackdriver.NewExporter(stackdriver.Options{
@@ -46,10 +57,16 @@ func main() {
 		DefaultMonitoringLabels: &stackdriver.Labels{},
 	})
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
+	defer exporter.Flush()
 	trace.RegisterExporter(exporter)
 	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
+
+	if err := exporter.StartMetricsExporter(); err != nil {
+		logger.Fatalf("Error starting metric exporter: %v", err)
+	}
+	defer exporter.StopMetricsExporter()
 
 	client := &http.Client{
 		Transport: &ochttp.Transport{
@@ -63,8 +80,8 @@ func main() {
 		Propagation: &propagation.HTTPFormat{},
 	}
 
-	http.Handle("/version", VersionHandler{Logger: logger})
-	http.Handle("/", MainHandler{Logger: logger, Client: client})
+	http.Handle("/version", ochttp.WithRouteTag(VersionHandler{Logger: logger}, "/version"))
+	http.Handle("/", ochttp.WithRouteTag(MainHandler{Logger: logger, Client: client}, "/"))
 	http.ListenAndServe(":8080", httpHandler)
 }
 
