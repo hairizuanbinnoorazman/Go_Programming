@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,6 +9,7 @@ import (
 	"time"
 
 	"go.opencensus.io/stats"
+	"go.opencensus.io/tag"
 
 	sd "github.com/TV4/logrus-stackdriver-formatter"
 	"github.com/sirupsen/logrus"
@@ -26,7 +26,13 @@ var ServiceName = "Basic-With-Stackdriver"
 var Version = "0.1.0"
 
 var (
-	requestCounter = stats.Int64("request_count", "Number of requests by path", stats.UnitDimensionless)
+	ServerRequestCountView = &view.View{
+		Name:        "opencensus.io/http/server/request_count",
+		Description: "Count of HTTP requests started",
+		Measure:     ochttp.ServerRequestCount,
+		Aggregation: view.Count(),
+		TagKeys:     []tag.Key{ochttp.KeyServerRoute},
+	}
 )
 
 func main() {
@@ -39,7 +45,11 @@ func main() {
 	logger.Info("Application Start Up")
 	defer logger.Info("Application Ended")
 
-	if err := view.Register(ochttp.DefaultServerViews...); err != nil {
+	zz := ServerRequestCountView
+
+	logger.Info(zz)
+
+	if err := view.Register(zz); err != nil {
 		log.Fatalf("Failed to register the view: %v", err)
 	}
 
@@ -49,9 +59,15 @@ func main() {
 		Resource: &monitoredres.MonitoredResource{
 			Type: "gke_container",
 			Labels: map[string]string{
-				"project_id":   os.Getenv("GOOGLE_CLOUD_PROJECT"),
-				"namespace_id": os.Getenv("MY_POD_NAMESPACE"),
-				"pod_id":       os.Getenv("MY_POD_NAME"),
+				"project_id":          os.Getenv("GOOGLE_CLOUD_PROJECT"),
+				"namespace_id":        os.Getenv("MY_POD_NAMESPACE"),
+				"pod_id":              os.Getenv("MY_POD_NAME"),
+				"cluster_name":        os.Getenv("CLUSTER_NAME"),
+				"container_name":      os.Getenv("CONTAINER_NAME"),
+				"instance_id":         os.Getenv("INSTANCE_ID"),
+				"zone":                os.Getenv("ZONE"),
+				"application_name":    ServiceName,
+				"application_version": Version,
 			},
 		},
 		DefaultMonitoringLabels: &stackdriver.Labels{},
@@ -80,9 +96,28 @@ func main() {
 		Propagation: &propagation.HTTPFormat{},
 	}
 
-	http.Handle("/version", ochttp.WithRouteTag(VersionHandler{Logger: logger}, "/version"))
-	http.Handle("/", ochttp.WithRouteTag(MainHandler{Logger: logger, Client: client}, "/"))
+	http.Handle("/version", MonitoringHandler{
+		Zzz:   VersionHandler{Logger: logger},
+		Route: "/version",
+	})
+	http.Handle("/", MonitoringHandler{
+		Zzz:   MainHandler{Logger: logger, Client: client},
+		Route: "/",
+	})
 	http.ListenAndServe(":8080", httpHandler)
+}
+
+type MonitoringHandler struct {
+	Zzz   http.Handler
+	Route string
+}
+
+func (m MonitoringHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	ctx, _ := tag.New(r.Context(), tag.Insert(ochttp.KeyServerRoute, m.Route))
+	defer func() {
+		stats.Record(ctx, ochttp.ServerRequestCount.M(1))
+	}()
+	m.Zzz.ServeHTTP(w, r)
 }
 
 type MainHandler struct {
@@ -109,8 +144,6 @@ type VersionHandler struct {
 }
 
 func (v VersionHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	ctx := context.Background()
-	context.WithValue(ctx, "acacaca", "kcamlcamclmac")
 	v.Logger.WithField("kcmaclac", "acacacca").Info("Start version handler")
 	defer v.Logger.Info("End version handler")
 	fmt.Fprintf(w, "Version of app: %s\n", Version)
