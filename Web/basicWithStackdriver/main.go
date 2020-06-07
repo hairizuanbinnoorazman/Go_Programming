@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -10,6 +11,7 @@ import (
 
 	"go.opencensus.io/stats"
 	"go.opencensus.io/tag"
+	"gopkg.in/yaml.v2"
 
 	sd "github.com/TV4/logrus-stackdriver-formatter"
 	"github.com/sirupsen/logrus"
@@ -24,6 +26,7 @@ import (
 
 var ServiceName = "Basic-With-Stackdriver"
 var Version = "0.1.0"
+var ConfigFilePath = "/go/bin/config.yaml"
 
 var (
 	ServerRequestCountView = &view.View{
@@ -33,7 +36,12 @@ var (
 		Aggregation: view.Count(),
 		TagKeys:     []tag.Key{ochttp.KeyServerRoute},
 	}
+	config Config
 )
+
+type Config struct {
+	Endpoints []string `yaml:"endpoints"`
+}
 
 func main() {
 	logger := logrus.New()
@@ -41,6 +49,15 @@ func main() {
 		sd.WithService(ServiceName),
 		sd.WithVersion(Version),
 	)
+
+	// Read config file
+	rawConfig, err := ioutil.ReadFile(ConfigFilePath)
+	if err != nil {
+		logger.Errorf("Unable to read file in")
+		panic("Unable to read file")
+	}
+	err = yaml.Unmarshal(rawConfig, &config)
+
 	logger.Level = logrus.InfoLevel
 	logger.Info("Application Start Up")
 	defer logger.Info("Application Ended")
@@ -136,6 +153,25 @@ func (m MainHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	waitTime, _ := strconv.Atoi(waitTimeEnv)
 	m.Logger.Infof("Sleeping for %v", waitTime)
 	time.Sleep(time.Duration(waitTime) * time.Second)
+
+	if len(config.Endpoints) == 0 {
+		m.Logger.Info("No endpoints has been configured here")
+	}
+
+	// Loop through the endpoints
+	for _, extEndpoint := range config.Endpoints {
+		resp, err := m.Client.Get(extEndpoint)
+		if err != nil {
+			m.Logger.Errorf("Unable to contact endpoint: %v", extEndpoint)
+			continue
+		}
+		zz, _ := ioutil.ReadAll(resp.Body)
+		if resp.StatusCode != 200 {
+			m.Logger.Errorf("HTTP response unsuccessful. StatusCode: %v. Response: %v", resp.StatusCode, string(zz))
+			continue
+		}
+		m.Logger.Infof("HTTP response successful. Response: %v", string(zz))
+	}
 	fmt.Fprintf(w, "Hello World: %s!\n", target)
 }
 

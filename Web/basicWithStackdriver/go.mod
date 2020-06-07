@@ -9,4 +9,5 @@ require (
 	github.com/sirupsen/logrus v1.6.0
 	go.opencensus.io v0.22.3
 	google.golang.org/genproto v0.0.0-20190911173649-1774047e7e51
+	gopkg.in/yaml.v2 v2.3.0
 )
