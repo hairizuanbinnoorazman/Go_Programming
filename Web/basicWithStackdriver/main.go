@@ -26,7 +26,7 @@ import (
 
 var ServiceName = "Basic-With-Stackdriver"
 var Version = "0.1.0"
-var ConfigFilePath = "/go/bin/config.yaml"
+var ConfigFilePath = "/go/bin/miao/config.yaml"
 
 var (
 	ServerRequestCountView = &view.View{
@@ -34,8 +34,11 @@ var (
 		Description: "Count of HTTP requests started",
 		Measure:     ochttp.ServerRequestCount,
 		Aggregation: view.Count(),
-		TagKeys:     []tag.Key{ochttp.KeyServerRoute},
+		TagKeys:     []tag.Key{ochttp.KeyServerRoute, ApplicationKeyTag, ApplicationVersionKeyTag},
 	}
+	ApplicationKeyTag        = tag.MustNewKey("application")
+	ApplicationVersionKeyTag = tag.MustNewKey("version")
+
 	config Config
 )
 
@@ -50,10 +53,13 @@ func main() {
 		sd.WithVersion(Version),
 	)
 
+	// Make it easier to configure utilizing the same images but reporting different images
+	ServiceName = os.Getenv("SERVICE_NAME")
+
 	// Read config file
 	rawConfig, err := ioutil.ReadFile(ConfigFilePath)
 	if err != nil {
-		logger.Errorf("Unable to read file in")
+		logger.Errorf("Unable to read file in. %v. ConfigFilePath: %v", err, ConfigFilePath)
 		panic("Unable to read file")
 	}
 	err = yaml.Unmarshal(rawConfig, &config)
@@ -76,15 +82,13 @@ func main() {
 		Resource: &monitoredres.MonitoredResource{
 			Type: "gke_container",
 			Labels: map[string]string{
-				"project_id":          os.Getenv("GOOGLE_CLOUD_PROJECT"),
-				"namespace_id":        os.Getenv("MY_POD_NAMESPACE"),
-				"pod_id":              os.Getenv("MY_POD_NAME"),
-				"cluster_name":        os.Getenv("CLUSTER_NAME"),
-				"container_name":      os.Getenv("CONTAINER_NAME"),
-				"instance_id":         os.Getenv("INSTANCE_ID"),
-				"zone":                os.Getenv("ZONE"),
-				"application_name":    ServiceName,
-				"application_version": Version,
+				"project_id":     os.Getenv("GOOGLE_CLOUD_PROJECT"),
+				"namespace_id":   os.Getenv("MY_POD_NAMESPACE"),
+				"pod_id":         os.Getenv("MY_POD_NAME"),
+				"cluster_name":   os.Getenv("CLUSTER_NAME"),
+				"container_name": os.Getenv("CONTAINER_NAME"),
+				"instance_id":    os.Getenv("INSTANCE_ID"),
+				"zone":           os.Getenv("ZONE"),
 			},
 		},
 		DefaultMonitoringLabels: &stackdriver.Labels{},
@@ -130,7 +134,12 @@ type MonitoringHandler struct {
 }
 
 func (m MonitoringHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	ctx, _ := tag.New(r.Context(), tag.Insert(ochttp.KeyServerRoute, m.Route))
+	ctx, _ := tag.New(
+		r.Context(),
+		tag.Insert(ochttp.KeyServerRoute, m.Route),
+		tag.Insert(ApplicationKeyTag, ServiceName),
+		tag.Insert(ApplicationVersionKeyTag, Version),
+	)
 	defer func() {
 		stats.Record(ctx, ochttp.ServerRequestCount.M(1))
 	}()
@@ -143,6 +152,9 @@ type MainHandler struct {
 }
 
 func (m MainHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	_, span := trace.StartSpan(r.Context(), fmt.Sprintf("%v mainHandler", ServiceName))
+	defer span.End()
+
 	m.Logger.WithField("acac", "akcnkackacm").Info("Hello world received a request.")
 	defer m.Logger.Infof("End hello world request")
 	target := os.Getenv("TARGET")
@@ -160,7 +172,11 @@ func (m MainHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Loop through the endpoints
 	for _, extEndpoint := range config.Endpoints {
-		resp, err := m.Client.Get(extEndpoint)
+		_, span := trace.StartSpan(r.Context(), fmt.Sprintf("%v mainHandler - call endpoint %v", ServiceName, extEndpoint))
+		defer span.End()
+		req, _ := http.NewRequest("GET", extEndpoint, nil)
+		req = req.WithContext(r.Context())
+		resp, err := m.Client.Do(req)
 		if err != nil {
 			m.Logger.Errorf("Unable to contact endpoint: %v", extEndpoint)
 			continue
