@@ -5,6 +5,8 @@ metadata:
     run: app
   name: app
   namespace: default
+  annotations:
+    sidecar.jaegertracing.io/inject: "true"
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -20,7 +22,7 @@ spec:
         run: app
     spec:
       containers:
-        - image: gcr.io/<PROJECT_ID>/basicwithtracing:v3
+        - image: gcr.io/<PROJECT_ID>/basicwithtracing:v5
           imagePullPolicy: Always
           name: app
           env:
@@ -42,6 +44,8 @@ metadata:
     run: app2
   name: app2
   namespace: default
+  annotations:
+    sidecar.jaegertracing.io/inject: "true"
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -57,7 +61,7 @@ spec:
         run: app2
     spec:
       containers:
-        - image: gcr.io/<PROJECT_ID>/basicwithtracing:v3
+        - image: gcr.io/<PROJECT_ID>/basicwithtracing:v5
           imagePullPolicy: Always
           name: app2
           env:
@@ -94,6 +98,8 @@ metadata:
     run: app3
   name: app3
   namespace: default
+  annotations:
+    sidecar.jaegertracing.io/inject: "true"
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -109,7 +115,7 @@ spec:
         run: app3
     spec:
       containers:
-        - image: gcr.io/<PROJECT_ID>/basicwithtracing:v3
+        - image: gcr.io/<PROJECT_ID>/basicwithtracing:v5
           imagePullPolicy: Always
           name: app3
           env:
