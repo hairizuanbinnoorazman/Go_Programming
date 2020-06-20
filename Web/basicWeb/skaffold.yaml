@@ -1,0 +1,26 @@
+apiVersion: skaffold/v2beta5
+kind: Config
+metadata:
+  name: test
+build:
+  artifacts:
+    - image: gcr.io/<PROJECT_ID>/helloworld
+      context: .
+      docker:
+        dockerfile: Dockerfile
+  # local:
+  #   push: true
+  tagPolicy:
+    sha256: {}
+  googleCloudBuild:
+    concurrency: 1
+    projectId: <PROJECT_ID>
+    dockerImage: gcr.io/cloud-builders/docker
+    gradleImage: gcr.io/cloud-builders/gradle
+    kanikoImage: gcr.io/kaniko-project/executor
+    mavenImage: gcr.io/cloud-builders/mvn
+    packImage: gcr.io/k8s-skaffold/pack
+deploy:
+  kubectl:
+    manifests:
+      - k8s/*.yaml

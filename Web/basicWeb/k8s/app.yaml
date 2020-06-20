@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: helloworld-1
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      run: helloworld-1
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        run: helloworld-1
+    spec:
+      containers:
+        - image: gcr.io/<PROJECT_ID>/helloworld
+          name: helloworld
+      restartPolicy: Always

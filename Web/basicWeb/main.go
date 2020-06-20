@@ -33,5 +33,5 @@ func main() {
 
 func helloWorldHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("serving", r.URL)
-	fmt.Fprint(w, "Hello World v3!!\n")
+	fmt.Fprint(w, "This is a test. Hello World Miaoza!!\n")
 }
