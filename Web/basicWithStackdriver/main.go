@@ -7,8 +7,10 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
+	"cloud.google.com/go/profiler"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/tag"
 	"gopkg.in/yaml.v2"
@@ -36,6 +38,13 @@ var (
 		Aggregation: view.Count(),
 		TagKeys:     []tag.Key{ochttp.KeyServerRoute, ApplicationKeyTag, ApplicationVersionKeyTag},
 	}
+	ServerLatencyView = &view.View{
+		Name:        "opencensus.io/http/server/latency",
+		Description: "Latency distribution of HTTP requests",
+		Measure:     ochttp.ServerLatency,
+		Aggregation: ochttp.DefaultLatencyDistribution,
+		TagKeys:     []tag.Key{ochttp.KeyServerRoute, ApplicationKeyTag, ApplicationVersionKeyTag},
+	}
 	ApplicationKeyTag        = tag.MustNewKey("application")
 	ApplicationVersionKeyTag = tag.MustNewKey("version")
 
@@ -47,14 +56,22 @@ type Config struct {
 }
 
 func main() {
+	// Make it easier to configure utilizing the same images but reporting different images
+	ServiceName = os.Getenv("SERVICE_NAME")
+
 	logger := logrus.New()
 	logger.Formatter = sd.NewFormatter(
-		sd.WithService(ServiceName),
+		sd.WithService(strings.ToLower(ServiceName)),
 		sd.WithVersion(Version),
 	)
 
-	// Make it easier to configure utilizing the same images but reporting different images
-	ServiceName = os.Getenv("SERVICE_NAME")
+	if err := profiler.Start(profiler.Config{
+		Service:        ServiceName,
+		ServiceVersion: Version,
+		ProjectID:      os.Getenv("GOOGLE_CLOUD_PROJECT"),
+	}); err != nil {
+		logger.Errorf("Unable to start profiler")
+	}
 
 	// Read config file
 	rawConfig, err := ioutil.ReadFile(ConfigFilePath)
@@ -68,11 +85,7 @@ func main() {
 	logger.Info("Application Start Up")
 	defer logger.Info("Application Ended")
 
-	zz := ServerRequestCountView
-
-	logger.Info(zz)
-
-	if err := view.Register(zz); err != nil {
+	if err := view.Register(ServerRequestCountView, ServerLatencyView); err != nil {
 		log.Fatalf("Failed to register the view: %v", err)
 	}
 
@@ -134,6 +147,7 @@ type MonitoringHandler struct {
 }
 
 func (m MonitoringHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	startTime := time.Now()
 	ctx, _ := tag.New(
 		r.Context(),
 		tag.Insert(ochttp.KeyServerRoute, m.Route),
@@ -141,7 +155,11 @@ func (m MonitoringHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		tag.Insert(ApplicationVersionKeyTag, Version),
 	)
 	defer func() {
-		stats.Record(ctx, ochttp.ServerRequestCount.M(1))
+		stats.Record(
+			ctx,
+			ochttp.ServerRequestCount.M(1),
+			ochttp.ServerLatency.M(float64(time.Now().Sub(startTime).Milliseconds())),
+		)
 	}()
 	m.Zzz.ServeHTTP(w, r)
 }
