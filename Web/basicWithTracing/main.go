@@ -16,6 +16,45 @@ import (
 	"github.com/uber/jaeger-lib/metrics"
 )
 
+type LogTransport struct {
+	Transport http.RoundTripper
+}
+
+func (l LogTransport) RoundTrip(a *http.Request) (*http.Response, error) {
+	startTime := time.Now().String()
+	resp, err := l.Transport.RoundTrip(a)
+	defer log.Printf("Method: %v URL: %v StartTime: %v EndTime: %v ResponseCode: %v\n",
+		a.Method, a.URL.String(), startTime, time.Now().String(), resp.StatusCode)
+	return resp, err
+}
+
+type TraceTransport struct {
+	Transport http.RoundTripper
+}
+
+func (t TraceTransport) RoundTrip(a *http.Request) (*http.Response, error) {
+	tracer := opentracing.GlobalTracer()
+	ctx := a.Context()
+	parentSpan := opentracing.SpanFromContext(ctx)
+	var childSpan opentracing.Span
+	if parentSpan == nil {
+		childSpan = tracer.StartSpan("client")
+	} else {
+		childSpan = tracer.StartSpan("client", opentracing.ChildOf(parentSpan.Context()))
+	}
+	defer childSpan.Finish()
+	ext.SpanKindRPCClient.Set(childSpan)
+	ext.HTTPUrl.Set(childSpan, a.URL.String())
+	ext.HTTPMethod.Set(childSpan, a.Method)
+	tracer.Inject(childSpan.Context(), opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(a.Header))
+	resp, err := t.Transport.RoundTrip(a)
+	if err != nil {
+		ext.Error.Set(childSpan, true)
+	}
+	ext.HTTPStatusCode.Set(childSpan, uint16(resp.StatusCode))
+	return resp, err
+}
+
 func handler(w http.ResponseWriter, r *http.Request) {
 	tracer := opentracing.GlobalTracer()
 	spanCtx, _ := tracer.Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(r.Header))
@@ -37,14 +76,18 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	clientURL := os.Getenv("CLIENT_URL")
 	if clientURL != "" {
 		url := clientURL
-		req, _ := http.NewRequest("GET", url, nil)
+		ctx := opentracing.ContextWithSpan(r.Context(), serverSpan)
+		req, _ := http.NewRequestWithContext(ctx, "GET", url, nil)
 
-		ext.SpanKindRPCClient.Set(serverSpan)
-		ext.HTTPUrl.Set(serverSpan, url)
-		ext.HTTPMethod.Set(serverSpan, "GET")
+		traceClient := http.Client{
+			Transport: TraceTransport{
+				LogTransport{
+					Transport: http.DefaultTransport,
+				},
+			},
+		}
 
-		tracer.Inject(serverSpan.Context(), opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(req.Header))
-		http.DefaultClient.Do(req)
+		traceClient.Do(req)
 	}
 }
 
