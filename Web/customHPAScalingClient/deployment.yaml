@@ -1,0 +1,25 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: custom-hpa-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app:  custom-hpa-client
+      component: custom-hpa-client
+  template:
+    metadata:
+      labels:
+        app:  custom-hpa-client
+        component: custom-hpa-client
+    spec:
+      containers:
+      - name: custom-hpa-client
+        image: custom-hpa-client:v1
+        command: ["/home/custom"]
+        env:
+          - name: QUEUE_ITEM_SERVER
+            value: "http://custom-hpa:8080/dec"
+          - name: QUEUE_ITEM_CONSUMPTION
+            value: "10"
