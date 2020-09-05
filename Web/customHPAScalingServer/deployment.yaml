@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: custom-hpa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app:  custom-hpa
+      component: custom-hpa
+  template:
+    metadata:
+      labels:
+        app:  custom-hpa
+        component: custom-hpa
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+    spec:
+      containers:
+      - name: custom-hpa
+        image: custom-hpa:v3
+        command: ["/home/custom"]
+        env:
+          - name: QUEUE_ITEM_GENERATION
+            value: "32"

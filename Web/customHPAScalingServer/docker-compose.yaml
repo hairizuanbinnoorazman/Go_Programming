@@ -1,0 +1,16 @@
+version: "3.5"
+
+services:
+  loader:
+    build: .
+    command: /home/custom
+    environment:
+      - QUEUE_ITEM_GENERATION=1
+    ports:
+      - "8080:8080"
+  prometheus:
+    image: prom/prometheus:v2.20.1
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"

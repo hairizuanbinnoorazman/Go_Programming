@@ -1,0 +1,13 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name:  custom-hpa
+spec:
+  selector:
+    app:  custom-hpa
+    component: custom-hpa
+  type: ClusterIP
+  ports:
+  - name:  http
+    port:  8080
+    targetPort:  8080
