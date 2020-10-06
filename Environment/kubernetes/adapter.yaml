@@ -1,0 +1,9 @@
+prometheus:
+  url: http://kube-prometheus-stack-prometheus.default.svc
+rules:
+  default: false
+  external:
+    - seriesQuery: '{__name__=~"^testservice.*item$"}'
+      resources:
+        template: <<.Resource>>
+      metricsQuery: "<<.Series>>"
