@@ -8,6 +8,8 @@ Before proceeding - do adjust the kustomization.yml file. And push the required 
 
 ## Usage
 
+Before deploying, do ensure that you build the required image and push to an image registry that is accessible by Kubernetes cluster
+
 ```bash
 # To deploy the components
 make deploy
