@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"cloud.google.com/go/profiler"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/tag"
 	"gopkg.in/yaml.v2"
@@ -65,13 +64,13 @@ func main() {
 		sd.WithVersion(Version),
 	)
 
-	if err := profiler.Start(profiler.Config{
-		Service:        ServiceName,
-		ServiceVersion: Version,
-		ProjectID:      os.Getenv("GOOGLE_CLOUD_PROJECT"),
-	}); err != nil {
-		logger.Errorf("Unable to start profiler")
-	}
+	// if err := profiler.Start(profiler.Config{
+	// 	Service:        ServiceName,
+	// 	ServiceVersion: Version,
+	// 	ProjectID:      os.Getenv("GOOGLE_CLOUD_PROJECT"),
+	// }); err != nil {
+	// 	logger.Errorf("Unable to start profiler")
+	// }
 
 	// Read config file
 	rawConfig, err := ioutil.ReadFile(ConfigFilePath)
