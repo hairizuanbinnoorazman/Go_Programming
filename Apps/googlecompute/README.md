@@ -22,3 +22,21 @@ docker push -t gcr.io/XXX-PROJECT-ID-XXX/sample-google-compute:v1
 ```
 
 On GKE - utilize workload identity - can skip embedding the of secrets into the application
+
+```bash
+gcloud iam service-accounts create sample-google-compute
+
+gcloud projects add-iam-policy-binding XXXXXX \
+--member="serviceAccount:sample-google-compute@XXXXXX.iam.gserviceaccount.com" \
+--role="roles/editor"
+
+gcloud iam service-accounts add-iam-policy-binding \
+sample-google-compute@XXXXX.iam.gserviceaccount.com \
+--member="serviceAccount:XXXXXX.svc.id.goog[default/default]" \
+--role="roles/iam.workloadIdentityUser"
+
+kubectl annotate serviceaccount \
+  --namespace default \
+  default \
+  iam.gke.io/gcp-service-account=sample-google-compute@XXXXXX.iam.gserviceaccount.com
+```
