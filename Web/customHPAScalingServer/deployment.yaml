@@ -23,4 +23,4 @@ spec:
         command: ["/home/custom"]
         env:
           - name: QUEUE_ITEM_GENERATION
-            value: "32"
+            value: "75"
