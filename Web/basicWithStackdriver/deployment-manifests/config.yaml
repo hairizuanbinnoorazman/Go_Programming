@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-1
+  namespace: default
+data:
+  APP_CONFIG: |
+    endpoints: ["http://app-2:8080/", "http://app-3:8080/"]

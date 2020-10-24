@@ -1,0 +1,176 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    run: app-2
+  name: app-2
+  namespace: default
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      run: app-2
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        run: app-2
+    spec:
+      volumes:
+        - name: config-volume
+          configMap:
+            name: app-2
+            items:
+              - key: APP_CONFIG
+                path: config.yaml
+      containers:
+        - image: gcr.io/XXXXX/basicwithstackdriver:v17
+          imagePullPolicy: Always
+          name: basicwithstackdriver
+          volumeMounts:
+            - name: config-volume
+              mountPath: /go/bin/miao
+          env:
+            - name: GOOGLE_CLOUD_PROJECT
+              value: "XXXXX"
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: MY_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: INSTANCE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: CLUSTER_NAME
+              value: "cluster-1"
+            - name: CONTAINER_NAME
+              value: basicwithstackdriver
+            - name: ZONE
+              value: us-central1-c
+            - name: SERVICE_NAME
+              value: application-2
+            - name: TARGET
+              value: application-2
+            - name: WAIT_TIME
+              value: "1"
+      restartPolicy: Always
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    run: app-3
+  name: app-3
+  namespace: default
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      run: app-3
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        run: app-3
+    spec:
+      volumes:
+        - name: config-volume
+          configMap:
+            name: app-3
+            items:
+              - key: APP_CONFIG
+                path: config.yaml
+      containers:
+        - image: gcr.io/XXXXX/basicwithstackdriver:v17
+          imagePullPolicy: Always
+          name: basicwithstackdriver
+          volumeMounts:
+            - name: config-volume
+              mountPath: /go/bin/miao
+          env:
+            - name: GOOGLE_CLOUD_PROJECT
+              value: "XXXXX"
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: MY_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: INSTANCE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: CLUSTER_NAME
+              value: "cluster-1"
+            - name: CONTAINER_NAME
+              value: basicwithstackdriver
+            - name: ZONE
+              value: us-central1-c
+            - name: SERVICE_NAME
+              value: application-3
+            - name: TARGET
+              value: application-3
+            - name: WAIT_TIME
+              value: "3"
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    run: app-2
+  name: app-2
+  namespace: default
+spec:
+  ports:
+    - port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    run: app-2
+  type: NodePort
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    run: app-3
+  name: app-3
+  namespace: default
+spec:
+  ports:
+    - port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    run: app-3
+  type: NodePort
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-2
+  namespace: default
+data:
+  APP_CONFIG: |
+    endpoints: ["http://app-3:8080/"]
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-3
+  namespace: default
+data:
+  APP_CONFIG: |
+    endpoints: []

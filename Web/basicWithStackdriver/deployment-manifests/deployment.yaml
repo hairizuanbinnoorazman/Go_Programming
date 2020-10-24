@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    run: app-1
+  name: app-1
+  namespace: default
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      run: app-1
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        run: app-1
+    spec:
+      volumes:
+        - name: config-volume
+          configMap:
+            name: app-1
+            items:
+              - key: APP_CONFIG
+                path: config.yaml
+      containers:
+        - image: gcr.io/XXXXX/basicwithstackdriver:v17
+          imagePullPolicy: Always
+          name: basicwithstackdriver
+          volumeMounts:
+            - name: config-volume
+              mountPath: /go/bin/miao
+          env:
+            - name: GOOGLE_CLOUD_PROJECT
+              value: "XXXXX"
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: MY_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: INSTANCE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: CLUSTER_NAME
+              value: "cluster-1"
+            - name: CONTAINER_NAME
+              value: basicwithstackdriver
+            - name: ZONE
+              value: us-central1-c
+            - name: SERVICE_NAME
+              value: application-1
+            - name: TARGET
+              value: application-1
+            - name: WAIT_TIME
+              value: "2"
+      restartPolicy: Always
