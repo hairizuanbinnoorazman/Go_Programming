@@ -2,12 +2,11 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"log"
+	"net/http"
 )
 
-
-type helloWorldHandler struct {}
+type helloWorldHandler struct{}
 
 func (h helloWorldHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Println("Serving hello world handler")
