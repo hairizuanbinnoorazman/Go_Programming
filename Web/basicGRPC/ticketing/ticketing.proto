@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+option go_package = "github.com/hairizuanbinnoorazman/basic-grpc/ticketing";
+
+package ticketing;
+
+service CustomerController {
+    rpc GetCustomer(GetCustomerRequest) returns (Customer) {}
+    rpc CreateCustomer(CreateCustomerRequest) returns (Customer) {}
+    rpc ListCustomers(ListCustomersRequest) returns (CustomerList) {}
+}
+
+message GetCustomerRequest {
+    string id = 1;
+}
+
+message CreateCustomerRequest {
+    string first_name = 1;
+    string last_name = 2;
+}
+
+message ListCustomersRequest {}
+
+message CustomerList {
+    repeated Customer customers = 1;
+}
+
+message Customer {
+    string id = 1;
+    string first_name = 2;
+    string last_name = 3;
+}
