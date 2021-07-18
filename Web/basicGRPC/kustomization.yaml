@@ -1,0 +1,13 @@
+# Comment out resources accordingly to which is to be applied
+resources:
+- deploy.yaml
+# - alteredclient.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+images:
+- name: grpc-client
+  newName: grpc-client
+  newTag: 0.0.1
+- name: grpc-server
+  newName: grpc-server
+  newTag: 0.0.1
