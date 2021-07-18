@@ -1,10 +1,11 @@
 package main
 
 import (
-	"net/http"
-	"github.com/gorilla/websocket"
 	"log"
+	"net/http"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 var upgrader = websocket.Upgrader{}
@@ -15,9 +16,9 @@ func main() {
 		http.ServeFile(w, r, "index.html")
 	})
 
-	http.HandleFunc("/v1/ws", func(w http.ResponseWriter, r *http.Request){
+	http.HandleFunc("/v1/ws", func(w http.ResponseWriter, r *http.Request) {
 		var conn, _ = upgrader.Upgrade(w, r, nil)
-		go func(conn *websocket.Conn){
+		go func(conn *websocket.Conn) {
 			for {
 				mType, msg, err := conn.ReadMessage()
 				if err != nil {
@@ -30,13 +31,13 @@ func main() {
 		}(conn)
 	})
 
-	http.HandleFunc("/v2/ws", func(w http.ResponseWriter, r *http.Request){
+	http.HandleFunc("/v2/ws", func(w http.ResponseWriter, r *http.Request) {
 		var conn, _ = upgrader.Upgrade(w, r, nil)
-		go func (conn *websocket.Conn){
+		go func(conn *websocket.Conn) {
 			ch := time.Tick(time.Second)
 
 			for range ch {
-				conn.WriteJSON(myStruct{Username:"cnkamclacmajnejra"})
+				conn.WriteJSON(myStruct{Username: "cnkamclacmajnejra"})
 			}
 		}(conn)
 	})
