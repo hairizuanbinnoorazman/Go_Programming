@@ -1,0 +1,4 @@
+kubeDns:
+  enabled: true
+coreDns:
+  enabled: false

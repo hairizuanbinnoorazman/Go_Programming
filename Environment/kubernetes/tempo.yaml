@@ -1,0 +1,14 @@
+traces:
+  jaeger:
+    grpc: true
+
+storage:
+  trace:
+    backend: s3
+    s3:
+      bucket: testtest
+      endpoint: minio1-hl.default.svc.cluster.local:9000
+      access_key: minio
+      secret_key: minio123
+      region: us-east-1
+      insecure: true
