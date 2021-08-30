@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mc-config
+data:
+  config.json: |
+    {
+      "version": "10",
+      "aliases": {
+        "yahoo": {
+          "url": "http://minio1-hl.default.svc.cluster.local:9000",
+          "accessKey": "minio",
+          "secretKey": "minio123",
+          "api": "s3v4",
+          "path": "auto"
+        }
+      }
+    }
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: make-bucket-testtest
+spec:
+  template:
+    spec:
+      containers:
+      - name: mc
+        image: minio/mc
+        args: ['mb', '--ignore-existing', 'yahoo/testtest']
+        # For debugging
+        # args: ['admin', 'info', 'yahoo']
+        volumeMounts:
+          - mountPath: /root/.mc/config.json
+            name: mc-config
+            subPath: config.json
+      restartPolicy: Never
+      volumes:
+        - configMap:
+            defaultMode: 0777
+            name: mc-config
+          name: mc-config
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: make-bucket-haha
+spec:
+  template:
+    spec:
+      containers:
+      - name: mc
+        image: minio/mc
+        args: ['mb', '--ignore-existing', 'yahoo/haha']
+        # For debugging
+        # args: ['admin', 'info', 'yahoo']
+        volumeMounts:
+          - mountPath: /root/.mc/config.json
+            name: mc-config
+            subPath: config.json
+      restartPolicy: Never
+      volumes:
+        - configMap:
+            defaultMode: 0777
+            name: mc-config
+          name: mc-config
