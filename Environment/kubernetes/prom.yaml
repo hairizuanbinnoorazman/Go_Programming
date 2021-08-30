@@ -2,3 +2,31 @@ kubeDns:
   enabled: true
 coreDns:
   enabled: false
+grafana:
+  enabled: true
+  additionalDataSources:
+    - name: Tempo
+      type: tempo
+      access: proxy
+      uid: tempo_datasource
+      url: http://tempo-tempo-distributed-query-frontend:3100
+      jsonData:
+        tracesToLogs:
+          datasourceUid: loki_datasource
+    - name: Loki
+      type: loki
+      uid: loki_datasource
+      access: proxy
+      url: http://loki-loki-distributed-query-frontend:3100
+      jsonData:
+        maxLines: 1000
+        derivedFields:
+          - name: TraceID
+            matcherRegex: "\"traceID\":\"(\\w+)\""
+            url: "http://tempo-tempo-distributed-query-frontend:3100/trace/$${__value.raw}"
+        #   - datasourceUid: tempo_datasource
+        #     matcherRegex: "traceID":"(\\w+)"
+        #     name: TraceID
+        #     url: '$${__value.raw}'
+          
+        
