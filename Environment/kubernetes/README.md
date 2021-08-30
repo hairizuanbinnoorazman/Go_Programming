@@ -12,12 +12,6 @@ To connect to the cluster
 gcloud container clusters get-credentials cluster-2 --zone asia-southeast1-a
 ```
 
-To delete the cluster
-
-```bash
-gcloud container clusters delete cluster-2 --zone asia-southeast1-a
-```
-
 ## Application Monitoring & Dashboards
 
 ```
@@ -120,4 +114,28 @@ helm repo add grafana https://grafana.github.io/helm-charts
 helm repo update
 
 helm upgrade --install -f tempo.yaml tempo grafana/tempo-distributed
+```
+
+## Cleanup
+
+Delete everything that was installed
+
+```bash
+helm delete tempo
+helm delete promtail
+helm delete loki
+helm delete minio-operator
+helm delete kube-prometheus-stack
+```
+
+Delete volumes
+
+```bash
+kubectl delete pvc --all
+```
+
+To delete the cluster
+
+```bash
+gcloud container clusters delete cluster-2 --zone asia-southeast1-a
 ```
