@@ -11,6 +11,7 @@ cluster:
 observability:
 	helm upgrade --install -f prom.yaml kube-prometheus-stack prometheus-community/kube-prometheus-stack
 	helm upgrade --install -f minio.yaml minio-operator minio/minio-operator
+	sleep 20
 	make buckets
 	helm upgrade --install -f loki.yaml loki grafana/loki-distributed
 	helm upgrade --install -f promtail.yaml promtail grafana/promtail
@@ -27,7 +28,7 @@ delete:
 
 buckets:
 	kubectl apply -f make-bucket.yaml
-	sleep 10
+	sleep 20
 	sh check-bucket.sh make-bucket-testtest
 	sh check-bucket.sh make-bucket-haha
 	kubectl delete -f make-bucket.yaml
