@@ -139,3 +139,18 @@ To delete the cluster
 ```bash
 gcloud container clusters delete cluster-2 --zone asia-southeast1-a
 ```
+
+## Potential Tools
+
+- etcd operator
+- kafka operator
+- k6 performance tooling?
+- argocd
+- jenkins
+- airflow
+- http://allure.qatools.ru/
+- https://github.com/devopsprodigy/kubegraf
+- https://github.com/armosec/kubescape
+- vault-operator
+- open-policy-agent
+- keda
