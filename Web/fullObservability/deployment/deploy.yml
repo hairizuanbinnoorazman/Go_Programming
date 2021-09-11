@@ -11,6 +11,9 @@ spec:
   progressDeadlineSeconds: 600
   replicas: 1
   revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      run: app
   strategy:
     rollingUpdate:
       maxSurge: 25%
@@ -34,6 +37,14 @@ spec:
               value: app
             - name: CLIENT_URL
               value: "http://app2:8080"
+            - name: JAEGER_AGENT_HOST
+              value: tempo-tempo-distributed-distributor
+            - name: JAEGER_REPORTER_LOG_SPANS
+              value: "true"
+            - name: JAEGER_SAMPLER_TYPE
+              value: const
+            - name: JAEGER_SAMPLER_PARAM
+              value: 1
       dnsPolicy: ClusterFirst
       restartPolicy: Always
 ---
@@ -50,6 +61,9 @@ spec:
   progressDeadlineSeconds: 600
   replicas: 1
   revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      run: app
   strategy:
     rollingUpdate:
       maxSurge: 25%
@@ -73,6 +87,14 @@ spec:
               value: app2
             - name: CLIENT_URL
               value: "http://app3:8080"
+            - name: JAEGER_AGENT_HOST
+              value: tempo-tempo-distributed-distributor
+            - name: JAEGER_REPORTER_LOG_SPANS
+              value: "true"
+            - name: JAEGER_SAMPLER_TYPE
+              value: const
+            - name: JAEGER_SAMPLER_PARAM
+              value: 1
       dnsPolicy: ClusterFirst
       restartPolicy: Always
 ---
@@ -104,6 +126,9 @@ spec:
   progressDeadlineSeconds: 600
   replicas: 1
   revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      run: app
   strategy:
     rollingUpdate:
       maxSurge: 25%
@@ -125,6 +150,14 @@ spec:
               value: "MIAO"
             - name: SERVICE_NAME
               value: app3
+            - name: JAEGER_AGENT_HOST
+              value: tempo-tempo-distributed-distributor
+            - name: JAEGER_REPORTER_LOG_SPANS
+              value: "true"
+            - name: JAEGER_SAMPLER_TYPE
+              value: const
+            - name: JAEGER_SAMPLER_PARAM
+              value: 1
       dnsPolicy: ClusterFirst
       restartPolicy: Always
 ---
