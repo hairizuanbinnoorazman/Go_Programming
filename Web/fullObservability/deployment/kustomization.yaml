@@ -1,0 +1,9 @@
+# Comment out resources accordingly to which is to be applied
+resources:
+- deploy.yml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+images:
+- name: full-observability
+  newName: full-observability
+  newTag: latest
