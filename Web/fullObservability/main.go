@@ -10,7 +10,6 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
-	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 	jaegerlog "github.com/uber/jaeger-client-go/log"
 	"github.com/uber/jaeger-lib/metrics"
@@ -94,20 +93,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	log.Print("Hello world sample started.")
 
-	jaegerCollector := os.Getenv("JAEGER_COLLECTOR")
-	if jaegerCollector == "" {
-		log.Println("Will be utilizing local Jaeger agent")
-	}
-
-	cfg := jaegercfg.Configuration{
-		Sampler: &jaegercfg.SamplerConfig{
-			Type:  jaeger.SamplerTypeConst,
-			Param: 1,
-		},
-		Reporter: &jaegercfg.ReporterConfig{
-			CollectorEndpoint: jaegerCollector,
-			LogSpans:          true,
-		},
+	cfg, err := jaegercfg.FromEnv()
+	if err != nil {
+		// parsing errors might happen here, such as when we get a string where we expect a number
+		log.Printf("Could not parse Jaeger env vars: %s", err.Error())
+		panic("Unable to parse jaeger stuff")
 	}
 
 	jLogger := jaegerlog.StdLogger
