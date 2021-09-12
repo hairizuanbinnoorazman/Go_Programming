@@ -2,14 +2,16 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
+	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 	jaegerlog "github.com/uber/jaeger-client-go/log"
 	"github.com/uber/jaeger-lib/metrics"
@@ -41,7 +43,9 @@ func (t TraceTransport) RoundTrip(a *http.Request) (*http.Response, error) {
 	} else {
 		childSpan = tracer.StartSpan("client", opentracing.ChildOf(parentSpan.Context()))
 	}
+	traceID := childSpan.Context().(jaeger.SpanContext)
 	defer childSpan.Finish()
+	defer log.WithField("traceID", traceID).Info("Done with requests")
 	ext.SpanKindRPCClient.Set(childSpan)
 	ext.HTTPUrl.Set(childSpan, a.URL.String())
 	ext.HTTPMethod.Set(childSpan, a.Method)
@@ -91,12 +95,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	log.Print("Hello world sample started.")
+	log.SetFormatter(&log.JSONFormatter{})
+	log.Info("Application started")
 
 	cfg, err := jaegercfg.FromEnv()
 	if err != nil {
 		// parsing errors might happen here, such as when we get a string where we expect a number
-		log.Printf("Could not parse Jaeger env vars: %s", err.Error())
+		log.Errorf("Could not parse Jaeger env vars: %s", err.Error())
 		panic("Unable to parse jaeger stuff")
 	}
 
