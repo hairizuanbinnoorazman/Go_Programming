@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -94,6 +95,18 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type StatusHandler struct {
+	StatusType string
+}
+
+func (s StatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	log.Infof("Status Handler: %v started", s.StatusType)
+	zz := map[string]string{"status": "ok"}
+	aa, _ := json.Marshal(zz)
+	w.WriteHeader(http.StatusOK)
+	w.Write(aa)
+}
+
 func main() {
 	log.SetFormatter(&log.JSONFormatter{})
 	log.Info("Application started")
@@ -122,5 +135,7 @@ func main() {
 	defer closer.Close()
 
 	http.HandleFunc("/", handler)
+	http.Handle("/healthz", StatusHandler{StatusType: "healthz"})
+	http.Handle("/readyz", StatusHandler{StatusType: "readyz"})
 	http.ListenAndServe(":8080", nil)
 }
