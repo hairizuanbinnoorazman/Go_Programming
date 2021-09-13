@@ -12,10 +12,20 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 	jaegerlog "github.com/uber/jaeger-client-go/log"
 	"github.com/uber/jaeger-lib/metrics"
+)
+
+var (
+	requestsTotal = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "requests_total",
+		Help: "The total number of processed events",
+	})
 )
 
 type LogTransport struct {
@@ -137,5 +147,6 @@ func main() {
 	http.HandleFunc("/", handler)
 	http.Handle("/healthz", StatusHandler{StatusType: "healthz"})
 	http.Handle("/readyz", StatusHandler{StatusType: "readyz"})
+	http.Handle("/metrics", promhttp.Handler())
 	http.ListenAndServe(":8080", nil)
 }
