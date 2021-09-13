@@ -77,6 +77,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	log.Print("Hello world received a request.")
 	defer log.Print("End hello world request")
+	defer requestsTotal.Inc()
 	target := os.Getenv("TARGET")
 	if target == "" {
 		target = "NOT SPECIFIED"
