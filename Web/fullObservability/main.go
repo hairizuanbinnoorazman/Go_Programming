@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/http/pprof"
 	"os"
 	"strconv"
 	"time"
 
+	_ "net/http/pprof"
+
+	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/opentracing/opentracing-go"
@@ -151,10 +153,15 @@ func main() {
 	)
 	defer closer.Close()
 
-	http.HandleFunc("/", handler)
-	http.Handle("/healthz", StatusHandler{StatusType: "healthz"})
-	http.Handle("/readyz", StatusHandler{StatusType: "readyz"})
-	http.Handle("/metrics", promhttp.Handler())
-	http.HandleFunc("/profile", pprof.Profile)
-	http.ListenAndServe(fmt.Sprintf(":%v", serverPort), nil)
+	r := mux.NewRouter()
+	r.HandleFunc("/", handler)
+	r.Handle("/healthz", StatusHandler{StatusType: "healthz"})
+	r.Handle("/readyz", StatusHandler{StatusType: "readyz"})
+	r.Handle("/metrics", promhttp.Handler())
+
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
+
+	http.ListenAndServe(fmt.Sprintf(":%v", serverPort), r)
 }
