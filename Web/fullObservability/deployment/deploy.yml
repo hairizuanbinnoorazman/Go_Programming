@@ -199,3 +199,36 @@ spec:
   selector:
     run: app3
   type: ClusterIP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: app
+spec:
+  selector:
+    matchLabels:
+      run: app
+  podMetricsEndpoints:
+  - port: 8080
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: app2
+spec:
+  selector:
+    matchLabels:
+      run: app2
+  endpoints:
+  - port: 8080
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: app3
+spec:
+  selector:
+    matchLabels:
+      run: app3
+  endpoints:
+  - port: 8080
