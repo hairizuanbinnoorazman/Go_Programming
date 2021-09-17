@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/http/pprof"
 	"os"
 	"strconv"
 	"time"
@@ -154,5 +155,6 @@ func main() {
 	http.Handle("/healthz", StatusHandler{StatusType: "healthz"})
 	http.Handle("/readyz", StatusHandler{StatusType: "readyz"})
 	http.Handle("/metrics", promhttp.Handler())
+	http.HandleFunc("/profile", pprof.Profile)
 	http.ListenAndServe(fmt.Sprintf(":%v", serverPort), nil)
 }
