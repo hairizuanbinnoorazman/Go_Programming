@@ -5,10 +5,10 @@ This Golang application is meant to cover Logging, Metrics, Distributed Tracing 
 # Features of this app
 
 - [x] Distributed Tracing
-- [ ] Logging linked to Distributed Tracing
-- [ ] Metrics
+- [x] Logging linked to Distributed Tracing
+- [x] Metrics
 - [ ] Metrics with examplar support
-- [ ] Profiling support
+- [x] Profiling support
 
 Configuration - maybe use HPA to create large number of pods? 
 - [ ] Generation of Large amount of logs
