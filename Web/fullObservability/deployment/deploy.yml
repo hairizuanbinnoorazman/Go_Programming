@@ -45,6 +45,14 @@ spec:
               value: const
             - name: JAEGER_SAMPLER_PARAM
               value: 1
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
       dnsPolicy: ClusterFirst
       restartPolicy: Always
 ---
@@ -95,6 +103,14 @@ spec:
               value: const
             - name: JAEGER_SAMPLER_PARAM
               value: 1
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
       dnsPolicy: ClusterFirst
       restartPolicy: Always
 ---
@@ -158,6 +174,14 @@ spec:
               value: const
             - name: JAEGER_SAMPLER_PARAM
               value: 1
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
       dnsPolicy: ClusterFirst
       restartPolicy: Always
 ---
