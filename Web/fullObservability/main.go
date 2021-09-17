@@ -137,6 +137,11 @@ func main() {
 		serviceName = "NOT SPECIFIED"
 	}
 
+	serverPort := os.Getenv("SERVER_PORT")
+	if serverPort == "" {
+		serverPort = "8080"
+	}
+
 	// Initialize tracer with a logger and a metrics factory
 	closer, _ := cfg.InitGlobalTracer(
 		serviceName,
@@ -149,5 +154,5 @@ func main() {
 	http.Handle("/healthz", StatusHandler{StatusType: "healthz"})
 	http.Handle("/readyz", StatusHandler{StatusType: "readyz"})
 	http.Handle("/metrics", promhttp.Handler())
-	http.ListenAndServe(":8080", nil)
+	http.ListenAndServe(fmt.Sprintf(":%v", serverPort), nil)
 }
