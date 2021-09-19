@@ -7,6 +7,9 @@ metadata:
   namespace: default
   annotations:
     sidecar.jaegertracing.io/inject: "true"
+    profefe.com/enable: "true"
+    profefe.com/port: "6060"
+    profefe.com/service: "app"
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -65,6 +68,9 @@ metadata:
   namespace: default
   annotations:
     sidecar.jaegertracing.io/inject: "true"
+    profefe.com/enable: "true"
+    profefe.com/port: "6060"
+    profefe.com/service: "app2"
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -138,6 +144,9 @@ metadata:
   namespace: default
   annotations:
     sidecar.jaegertracing.io/inject: "true"
+    profefe.com/enable: "true"
+    profefe.com/port: "6060"
+    profefe.com/service: "app3"
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
