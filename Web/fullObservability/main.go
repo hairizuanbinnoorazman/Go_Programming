@@ -59,7 +59,7 @@ func (t TraceTransport) RoundTrip(a *http.Request) (*http.Response, error) {
 	}
 	traceID := childSpan.Context().(jaeger.SpanContext)
 	defer childSpan.Finish()
-	defer log.WithField("traceID", traceID).Info("Done with requests")
+	defer log.WithField("traceID", traceID.SpanID().String()).Info("Done with requests")
 	ext.SpanKindRPCClient.Set(childSpan)
 	ext.HTTPUrl.Set(childSpan, a.URL.String())
 	ext.HTTPMethod.Set(childSpan, a.Method)
@@ -76,10 +76,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	tracer := opentracing.GlobalTracer()
 	spanCtx, _ := tracer.Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(r.Header))
 	serverSpan := tracer.StartSpan("server", ext.RPCServerOption(spanCtx))
+	serverTraceID := serverSpan.Context().(jaeger.SpanContext)
 	defer serverSpan.Finish()
 
-	log.Print("Hello world received a request.")
-	defer log.Print("End hello world request")
+	log.WithField("traceID", serverTraceID.SpanID().String()).Print("Hello world received a request.")
+	defer log.WithField("traceID", serverTraceID.SpanID().String()).Print("End hello world request")
 	defer requestsTotal.Inc()
 	target := os.Getenv("TARGET")
 	if target == "" {
@@ -87,7 +88,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 	waitTimeEnv := os.Getenv("WAIT_TIME")
 	waitTime, _ := strconv.Atoi(waitTimeEnv)
-	log.Printf("Sleeping for %v", waitTime)
+	log.WithField("traceID", serverTraceID.SpanID().String()).Printf("Sleeping for %v", waitTime)
 	time.Sleep(time.Duration(waitTime) * time.Second)
 	fmt.Fprintf(w, "Hello: %s!\n", target)
 
