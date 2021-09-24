@@ -11,7 +11,7 @@ cluster:
 observability:
 	helm upgrade --install -f prom.yaml kube-prometheus-stack prometheus-community/kube-prometheus-stack
 	helm upgrade --install -f minio.yaml minio-operator minio/minio-operator
-	sleep 20
+	sleep 30
 	make buckets
 	helm upgrade --install -f loki.yaml loki grafana/loki-distributed
 	helm upgrade --install -f promtail.yaml promtail grafana/promtail
