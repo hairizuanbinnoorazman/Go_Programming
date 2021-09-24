@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -47,7 +47,7 @@ spec:
             - name: JAEGER_SAMPLER_TYPE
               value: const
             - name: JAEGER_SAMPLER_PARAM
-              value: 1
+              value: "1"
           livenessProbe:
             httpGet:
               path: /healthz
@@ -59,7 +59,7 @@ spec:
       dnsPolicy: ClusterFirst
       restartPolicy: Always
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -77,7 +77,7 @@ spec:
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      run: app
+      run: app2
   strategy:
     rollingUpdate:
       maxSurge: 25%
@@ -108,7 +108,7 @@ spec:
             - name: JAEGER_SAMPLER_TYPE
               value: const
             - name: JAEGER_SAMPLER_PARAM
-              value: 1
+              value: "1"
           livenessProbe:
             httpGet:
               path: /healthz
@@ -135,7 +135,7 @@ spec:
     run: app2
   type: ClusterIP
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -153,7 +153,7 @@ spec:
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      run: app
+      run: app3
   strategy:
     rollingUpdate:
       maxSurge: 25%
@@ -182,7 +182,7 @@ spec:
             - name: JAEGER_SAMPLER_TYPE
               value: const
             - name: JAEGER_SAMPLER_PARAM
-              value: 1
+              value: "1"
           livenessProbe:
             httpGet:
               path: /healthz
@@ -218,7 +218,7 @@ spec:
     matchLabels:
       run: app
   podMetricsEndpoints:
-  - port: 8080
+  - port: "8080"
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -229,7 +229,7 @@ spec:
     matchLabels:
       run: app2
   endpoints:
-  - port: 8080
+  - port: "8080"
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -240,4 +240,4 @@ spec:
     matchLabels:
       run: app3
   endpoints:
-  - port: 8080
+  - port: "8080"
