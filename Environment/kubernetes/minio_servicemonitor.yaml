@@ -1,0 +1,14 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: minio1
+spec:
+  namespaceSelector:
+    matchNames:
+    - default
+  selector:
+    matchLabels:
+      v1.min.io/tenant: minio1
+  endpoints:
+  - path: /minio/v2/metrics/cluster
+    port: "http-minio"
