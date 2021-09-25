@@ -35,3 +35,9 @@ buckets:
 
 access-grafana:
 	kubectl port-forward service/kube-prometheus-stack-grafana 3000:80
+
+access-prometheus:
+	kubectl port-forward service/kube-prometheus-stack-prometheus 9090:9090
+
+access-tempo:
+	kubectl port-forward service/tempo-tempo-distributed-query-frontend 16686:16686
