@@ -16,6 +16,9 @@ storage:
       insecure: true
       forcepathstyle: true
 
+serviceMonitor:
+  enabled: true
+
 config: |
   multitenancy_enabled: false
   compactor:
