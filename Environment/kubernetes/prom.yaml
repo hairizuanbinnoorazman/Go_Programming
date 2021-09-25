@@ -2,6 +2,14 @@ kubeDns:
   enabled: true
 coreDns:
   enabled: false
+prometheus:
+  prometheusSpec:
+    podMonitorSelectorNilUseHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelector:
+      matchLabels: {}
+    serviceMonitorSelector:
+      matchLabels: {}
 grafana:
   enabled: true
   additionalDataSources:
@@ -23,10 +31,10 @@ grafana:
         derivedFields:
           - name: TraceID
             matcherRegex: "\"traceID\":\"(\\w+)\""
-            url: "http://tempo-tempo-distributed-query-frontend:3100/trace/$${__value.raw}"
-        #   - datasourceUid: tempo_datasource
-        #     matcherRegex: "traceID":"(\\w+)"
-        #     name: TraceID
-        #     url: '$${__value.raw}'
+            url: "http://localhost:16686/trace/$${__value.raw}"
+          - datasourceUid: tempo_datasource
+            matcherRegex: "\"traceID\":\"(\\w+)\""
+            name: TraceID
+            url: '$${__value.raw}'
           
         
