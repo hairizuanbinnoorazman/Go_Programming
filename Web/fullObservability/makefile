@@ -7,3 +7,5 @@ push:
 deploy:
 	cd deployment && kustomize edit set image full-observability=gcr.io/${GCP_PROJECT}/full-observability:${VERSION}
 	kustomize build ./deployment | kubectl apply -f -
+req:
+	kubectl exec $$(kubectl get pods | grep app- | awk '{ printf $1 }') -- curl localhost:8080
