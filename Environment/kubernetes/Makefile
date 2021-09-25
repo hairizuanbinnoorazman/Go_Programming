@@ -28,7 +28,7 @@ delete:
 
 buckets:
 	kubectl apply -f make-bucket.yaml
-	sleep 20
+	sleep 30
 	sh check-bucket.sh make-bucket-testtest
 	sh check-bucket.sh make-bucket-haha
 	kubectl delete -f make-bucket.yaml
