@@ -85,3 +85,5 @@ loki:
       rule_path: /tmp/loki/scratch
       alertmanager_url: https://alertmanager.xx
       external_url: https://alertmanager.xx
+serviceMonitor:
+  enabled: true
