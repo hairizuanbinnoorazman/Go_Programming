@@ -33,6 +33,9 @@ buckets:
 	sh check-bucket.sh make-bucket-haha
 	kubectl delete -f make-bucket.yaml
 
+access-minio:
+	kubectl port-forward service/minio1-console 9090:9090
+
 access-grafana:
 	kubectl port-forward service/kube-prometheus-stack-grafana 3000:80
 
