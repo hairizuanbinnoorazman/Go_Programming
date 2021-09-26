@@ -1,0 +1,126 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    component: profefe
+  name: profefe
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: profefe
+  template:
+    metadata:
+      labels:
+        component: profefe
+    spec:
+      containers:
+      - args:
+        - -storage-type
+        - s3
+        - -s3.endpoint-url
+        - http://minio1-hl.default.svc.cluster.local:9000
+        - -s3.bucket
+        - profiler
+        image: profefe/profefe:git-c0fedf5
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: AWS_ACCESS_KEY_ID
+            value: "minio"
+          - name: AWS_SECRET_ACCESS_KEY
+            value: "minio123"
+        name: profefe
+        ports:
+        - containerPort: 10100
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    component: profefe
+  name: profefe-collector
+spec:
+  ports:
+  - name: collector
+    port: 10100
+    protocol: TCP
+    targetPort: 10100
+  selector:
+    component: profefe
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kprofefe
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: kprofefe
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - list
+  - get
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kprofefe
+subjects:
+  - kind: ServiceAccount
+    name: kprofefe
+    namespace: default
+roleRef:
+  kind: Role
+  name: kprofefe
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: kprofefe-default
+spec:
+  concurrencyPolicy: Replace
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          serviceAccount: kprofefe
+          serviceAccountName: kprofefe
+          containers:
+          - args:
+            # This cronjob will scrape all the pods that has the right
+            # annotations across all the namespaces
+            - --namespace
+            - default
+            # This url represents the profefe API location.
+            - --profefe-hostport
+            - http://profefe-collector.default.svc:10100
+            image: profefe/kprofefe
+            imagePullPolicy: IfNotPresent
+            name: kprofefe
+  schedule: '* * * * *'
+  successfulJobsHistoryLimit: 3
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: profefe
+spec:
+  namespaceSelector:
+    matchNames:
+    - default
+  selector:
+    matchLabels:
+      component: profefe
+  endpoints:
+  - path: /debug/metrics
+    port: "collector"
