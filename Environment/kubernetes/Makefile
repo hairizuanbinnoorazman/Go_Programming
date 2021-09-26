@@ -16,6 +16,7 @@ observability:
 	helm upgrade --install -f loki.yaml loki grafana/loki-distributed
 	helm upgrade --install -f promtail.yaml promtail grafana/promtail
 	helm upgrade --install -f tempo.yaml tempo grafana/tempo-distributed
+	kubectl apply -f profefe.yaml
 
 delete:
 	helm delete tempo
@@ -31,6 +32,7 @@ buckets:
 	sleep 30
 	sh check-bucket.sh make-bucket-testtest
 	sh check-bucket.sh make-bucket-haha
+	sh check-bucket.sh make-bucket-profiler
 	kubectl delete -f make-bucket.yaml
 
 access-minio:

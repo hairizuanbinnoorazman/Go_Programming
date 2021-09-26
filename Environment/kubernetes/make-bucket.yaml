@@ -64,3 +64,27 @@ spec:
             defaultMode: 0777
             name: mc-config
           name: mc-config
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: make-bucket-profiler
+spec:
+  template:
+    spec:
+      containers:
+      - name: mc
+        image: minio/mc
+        args: ['mb', '--ignore-existing', 'yahoo/profiler']
+        # For debugging
+        # args: ['admin', 'info', 'yahoo']
+        volumeMounts:
+          - mountPath: /root/.mc/config.json
+            name: mc-config
+            subPath: config.json
+      restartPolicy: Never
+      volumes:
+        - configMap:
+            defaultMode: 0777
+            name: mc-config
+          name: mc-config
