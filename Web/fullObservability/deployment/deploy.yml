@@ -76,9 +76,6 @@ metadata:
   namespace: default
   annotations:
     sidecar.jaegertracing.io/inject: "true"
-    profefe.com/enable: "true"
-    profefe.com/port: "6060"
-    profefe.com/service: "app2"
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -95,6 +92,10 @@ spec:
     metadata:
       labels:
         run: app2
+      annotations:
+        profefe.com/enable: "true"
+        profefe.com/port: "6060"
+        profefe.com/service: "app2"
     spec:
       containers:
         - image: full-observability:v5
@@ -117,14 +118,21 @@ spec:
               value: const
             - name: JAEGER_SAMPLER_PARAM
               value: "1"
+          ports:
+            - name: api
+              protocol: TCP
+              containerPort: 8080
+            - name: pprof
+              protocol: TCP
+              containerPort: 6060
           livenessProbe:
             httpGet:
               path: /healthz
-              port: 8080
+              port: api
           readinessProbe:
             httpGet:
               path: /readyz
-              port: 8080
+              port: api
       dnsPolicy: ClusterFirst
       restartPolicy: Always
 ---
@@ -153,9 +161,6 @@ metadata:
   namespace: default
   annotations:
     sidecar.jaegertracing.io/inject: "true"
-    profefe.com/enable: "true"
-    profefe.com/port: "6060"
-    profefe.com/service: "app3"
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -172,6 +177,10 @@ spec:
     metadata:
       labels:
         run: app3
+      annotations:
+        profefe.com/enable: "true"
+        profefe.com/port: "6060"
+        profefe.com/service: "app3"
     spec:
       containers:
         - image: full-observability:v5
@@ -192,14 +201,21 @@ spec:
               value: const
             - name: JAEGER_SAMPLER_PARAM
               value: "1"
+          ports:
+            - name: api
+              protocol: TCP
+              containerPort: 8080
+            - name: pprof
+              protocol: TCP
+              containerPort: 6060    
           livenessProbe:
             httpGet:
               path: /healthz
-              port: 8080
+              port: api
           readinessProbe:
             httpGet:
               path: /readyz
-              port: 8080
+              port: api
       dnsPolicy: ClusterFirst
       restartPolicy: Always
 ---
