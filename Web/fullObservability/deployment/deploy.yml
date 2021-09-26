@@ -7,9 +7,6 @@ metadata:
   namespace: default
   annotations:
     sidecar.jaegertracing.io/inject: "true"
-    profefe.com/enable: "true"
-    profefe.com/port: "6060"
-    profefe.com/service: "app"
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -26,6 +23,10 @@ spec:
     metadata:
       labels:
         run: app
+      annotations:
+        profefe.com/enable: "true"
+        profefe.com/port: "6060"
+        profefe.com/service: "app"
     spec:
       containers:
         - image: full-observability:v5
@@ -52,6 +53,9 @@ spec:
             - name: api
               protocol: TCP
               containerPort: 8080
+            - name: pprof
+              protocol: TCP
+              containerPort: 6060
           livenessProbe:
             httpGet:
               path: /healthz
