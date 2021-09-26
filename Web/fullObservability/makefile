@@ -1,3 +1,4 @@
+VERSION?=0.0.4
 GCP_PROJECT?=$$(gcloud config list project --format yaml  | yq e .core.project -)
 
 build:
