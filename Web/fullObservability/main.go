@@ -20,7 +20,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
-	jaegerlog "github.com/uber/jaeger-client-go/log"
 	jaegerprom "github.com/uber/jaeger-lib/metrics/prometheus"
 )
 
@@ -133,7 +132,7 @@ func main() {
 		panic("Unable to parse jaeger stuff")
 	}
 
-	jLogger := jaegerlog.StdLogger
+	jLogger := CustomLogger{}
 	jMetricsFactory := jaegerprom.New()
 
 	serviceName := os.Getenv("SERVICE_NAME")
@@ -165,4 +164,13 @@ func main() {
 	}()
 
 	http.ListenAndServe(fmt.Sprintf(":%v", serverPort), r)
+}
+
+type CustomLogger struct{}
+
+func (c CustomLogger) Error(msg string) {
+	log.Error(msg)
+}
+func (c CustomLogger) Infof(msg string, args ...interface{}) {
+	log.Infof(msg, args...)
 }
