@@ -21,7 +21,7 @@ import (
 	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 	jaegerlog "github.com/uber/jaeger-client-go/log"
-	"github.com/uber/jaeger-lib/metrics"
+	jaegerprom "github.com/uber/jaeger-lib/metrics/prometheus"
 )
 
 var (
@@ -134,7 +134,7 @@ func main() {
 	}
 
 	jLogger := jaegerlog.StdLogger
-	jMetricsFactory := metrics.NullFactory
+	jMetricsFactory := jaegerprom.New()
 
 	serviceName := os.Getenv("SERVICE_NAME")
 	if serviceName == "" {
