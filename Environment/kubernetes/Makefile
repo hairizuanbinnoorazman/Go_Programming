@@ -2,6 +2,16 @@ environment:
 	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 	helm repo add minio https://operator.min.io/
 	helm repo add grafana https://grafana.github.io/helm-charts
+	helm repo add nats https://nats-io.github.io/k8s/helm/charts/
+	helm repo add jetstack https://charts.jetstack.io
+	helm repo add bitnami https://charts.bitnami.com/bitnami
+	helm repo add codecentric https://codecentric.github.io/helm-charts
+	helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+	helm repo add kedacore https://kedacore.github.io/charts
+	helm repo add apache-airflow https://airflow.apache.org
+	helm repo add hashicorp https://helm.releases.hashicorp.com
+	helm repo add argo https://argoproj.github.io/argo-helm
+	helm repo add gatekeeper https://open-policy-agent.github.io/gatekeeper/charts
 	helm repo update
 
 cluster:
@@ -18,7 +28,38 @@ observability:
 	helm upgrade --install -f tempo.yaml tempo grafana/tempo-distributed
 	kubectl apply -f profefe.yaml
 
+mailhog:
+	helm upgrade --install mailhog codecentric/mailhog
+
+nats:
+	helm upgrade --install -f nats.yaml nats nats/nats
+
+certmanager:
+	helm upgrade --install cert-manager jetstack/cert-manager --set installCRDs=true
+
+vault:
+	helm upgrade --install vault hashicorp/vault
+
+mysql:
+	helm upgrade --install -f mysql.yaml mysql bitnami/mysql
+
+nginx:
+	helm upgrade --install -f ingress-nginx.yaml ingress-nginx ingress-nginx/ingress-nginx
+
+keycloak:
+	helm upgrade --install -f keycloak.yaml keycloak codecentric/keycloak
+
+gatekeeper:
+	helm install -n gatekeeper-system gatekeeper gatekeeper/gatekeeper --create-namespace
+
+#airflow:
+#	helm upgrade --install airflow apache-airflow/airflow
+
+#keda:
+#	helm upgrade --install keda.yaml kedacore/keda
+
 delete:
+	#helm list | grep deployed | awk '{ printf $$1" " }'
 	helm delete tempo
 	helm delete promtail
 	helm delete loki
@@ -46,3 +87,7 @@ access-prometheus:
 
 access-tempo:
 	kubectl port-forward service/tempo-tempo-distributed-query-frontend 16686:16686
+
+access-keycloak:
+	kubectl port-forward service/keycloak-http 8080:80
+	
