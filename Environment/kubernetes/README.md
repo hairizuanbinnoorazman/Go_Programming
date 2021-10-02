@@ -154,3 +154,11 @@ gcloud container clusters delete cluster-2 --zone asia-southeast1-a
 - vault-operator
 - open-policy-agent
 - keda
+
+## Keycloak and Mailhog
+
+https://github.com/codecentric/helm-charts/tree/master/charts
+
+## Airflow
+
+https://github.com/apache/airflow/blob/main/chart/values.yaml
