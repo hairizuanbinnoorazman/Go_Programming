@@ -1,3 +1,5 @@
+cluster_name?=cluster-2
+
 environment:
 	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 	helm repo add minio https://operator.min.io/
@@ -15,8 +17,8 @@ environment:
 	helm repo update
 
 cluster:
-	gcloud beta container clusters create "cluster-2" --zone "asia-southeast1-a" --no-enable-basic-auth --machine-type "e2-standard-4" --disk-type "pd-standard" --disk-size "100" --metadata disable-legacy-endpoints=true --max-pods-per-node "110" --num-nodes "3" --enable-ip-alias --no-enable-intra-node-visibility --default-max-pods-per-node "110" --no-enable-master-authorized-networks --addons HorizontalPodAutoscaling,HttpLoadBalancing,GcePersistentDiskCsiDriver --enable-autoupgrade --enable-autorepair --max-surge-upgrade 1 --max-unavailable-upgrade 0 --enable-shielded-nodes --node-locations "asia-southeast1-a" --logging=NONE --monitoring=NONE
-	gcloud container clusters get-credentials cluster-2 --zone asia-southeast1-a
+	gcloud beta container clusters create $(cluster_name) --zone "asia-southeast1-a" --no-enable-basic-auth --machine-type "e2-standard-4" --disk-type "pd-standard" --disk-size "100" --metadata disable-legacy-endpoints=true --max-pods-per-node "110" --num-nodes "3" --enable-ip-alias --no-enable-intra-node-visibility --default-max-pods-per-node "110" --no-enable-master-authorized-networks --addons HorizontalPodAutoscaling,HttpLoadBalancing,GcePersistentDiskCsiDriver --enable-autoupgrade --enable-autorepair --max-surge-upgrade 1 --max-unavailable-upgrade 0 --enable-shielded-nodes --node-locations "asia-southeast1-a" --logging=NONE --monitoring=NONE
+	gcloud container clusters get-credentials $(cluster_name) --zone asia-southeast1-a
 
 observability:
 	helm upgrade --install -f prom.yaml kube-prometheus-stack prometheus-community/kube-prometheus-stack
@@ -59,14 +61,9 @@ gatekeeper:
 #	helm upgrade --install keda.yaml kedacore/keda
 
 delete:
-	#helm list | grep deployed | awk '{ printf $$1" " }'
-	helm delete tempo
-	helm delete promtail
-	helm delete loki
-	helm delete minio-operator
-	helm delete kube-prometheus-stack
+	helm delete $$(helm list | grep deployed | awk '{ printf $$1" " }')
 	kubectl delete pvc --all
-	gcloud container clusters delete cluster-2 --quiet --zone asia-southeast1-a
+	gcloud container clusters delete $(cluster_name) --quiet --zone asia-southeast1-a
 
 buckets:
 	kubectl apply -f make-bucket.yaml
@@ -90,4 +87,3 @@ access-tempo:
 
 access-keycloak:
 	kubectl port-forward service/keycloak-http 8080:80
-	
