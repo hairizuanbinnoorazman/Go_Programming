@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -27,9 +28,17 @@ var (
 	space   = []byte{' '}
 )
 
+// https://github.com/gorilla/websocket/issues/367
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		_, err := r.Cookie("cookie-name")
+		if err != nil {
+			return false
+		}
+		return true
+	},
 }
 
 // Client is a middleman between the websocket connection and the hub.
