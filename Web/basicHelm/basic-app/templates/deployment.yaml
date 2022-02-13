@@ -42,7 +42,9 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: WAIT_TIME
-              value: "30"
+              value: "0"
+            - name: TARGET
+              value: Lola
           volumeMounts:
             - name: foo
               mountPath: "/etc/foo"
