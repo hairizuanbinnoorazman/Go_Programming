@@ -21,6 +21,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Sleeping for %v", waitTime)
 	time.Sleep(time.Duration(waitTime) * time.Second)
 	fmt.Fprintf(w, "Hello World: %s!\n", target)
+	w.Write([]byte(target))
+	return
 }
 
 func main() {
