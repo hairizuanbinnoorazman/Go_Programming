@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: distroless-helloworld-1
+  labels:
+    run: helloworld-1
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      run: helloworld-1
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        run: helloworld-1
+    spec:
+      securityContext:
+        # https://kubesec.io/basics/containers-securitycontext-runasuser/
+        runAsUser: 20000
+        runAsGroup: 20000
+        fsGroup: 20000
+      containers:
+        - image: gcr.io/<project id>/distroless-hello-world:v1
+          name: helloworld
+          ports:
+            - containerPort: 8080
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            runAsNonRoot: true
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - all
+      restartPolicy: Always
+---
+
