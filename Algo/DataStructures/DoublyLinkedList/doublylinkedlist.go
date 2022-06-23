@@ -16,6 +16,30 @@ func Print(root *Node) {
 	}
 }
 
+func Delete(root *Node, loc int) *Node {
+	counter := 0
+	n := root
+	var p *Node
+	for n != nil {
+		if counter == loc {
+			if p == nil {
+				temp := n.Next
+				n.Next = nil
+				n.Previous = nil
+				return temp
+			}
+			p.Next = n.Next
+			n.Next = nil
+			n.Previous = nil
+			return root
+		}
+		p = n
+		n = n.Next
+		counter = counter + 1
+	}
+	return nil
+}
+
 func Insert(root *Node, newNode *Node, loc int) *Node {
 	counter := 0
 	n := root
@@ -56,7 +80,7 @@ func main() {
 	cc.Previous = &bb
 
 	Print(&aa)
-	dd := Node{Value: 4}
-	hh := Insert(&aa, &dd, 3)
+	fmt.Println("next")
+	hh := Delete(&aa, 3)
 	Print(hh)
 }
