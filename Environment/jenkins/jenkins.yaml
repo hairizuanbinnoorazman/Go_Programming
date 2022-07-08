@@ -1,0 +1,35 @@
+jenkins:
+  systemMessage: Jenkins managed via Configuration as Code
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+       - id: admin
+         password: password
+  authorizationStrategy:
+    roleBased:
+      roles:
+        global:
+          - name: "admin"
+            description: "Jenkins administrators"
+            permissions:
+              - "Overall/Administer"
+            assignments:
+              - "admin"
+          - name: "readonly"
+            description: "Read-only users"
+            permissions:
+              - "Overall/Read"
+              - "Job/Read"
+            assignments:
+              - "authenticated"
+  crumbIssuer: "standard" 
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - usernamePassword:
+              scope: SYSTEM
+              id: admin
+              username: admin
+              password: password
