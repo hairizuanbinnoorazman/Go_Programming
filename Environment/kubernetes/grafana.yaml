@@ -1,0 +1,46 @@
+
+adminUser: admin
+adminPassword: prom-operator
+plugins:
+  - pyroscope-panel
+  - pyroscope-datasource
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        uid: prometheus
+        url: http://kube-prometheus-stack-prometheus.default:9090/
+        access: proxy
+        jsonData:
+          timeInterval: 30s
+      - name: Tempo
+        type: tempo
+        access: proxy
+        uid: tempo_datasource
+        url: http://tempo-tempo-distributed-query-frontend:3100
+        jsonData:
+          tracesToLogs:
+            datasourceUid: loki_datasource
+      - name: Loki
+        type: loki
+        uid: loki_datasource
+        access: proxy
+        url: http://loki-loki-distributed-query-frontend:3100
+        jsonData:
+          maxLines: 1000
+          derivedFields:
+            - name: TraceID
+              matcherRegex: "\"traceID\":\"(\\w+)\""
+              url: "http://localhost:16686/trace/$${__value.raw}"
+            - datasourceUid: tempo_datasource
+              matcherRegex: "\"traceID\":\"(\\w+)\""
+              name: TraceID
+              url: '$${__value.raw}'
+      - name: Pyroscope
+        type: pyroscope-datasource
+        access: proxy
+        uid: pyroscope
+        jsonData:
+          path: http://pyroscope:4040
