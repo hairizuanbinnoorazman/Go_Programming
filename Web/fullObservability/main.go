@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 
-	_ "net/http/pprof"
+	pprof "net/http/pprof"
 
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
@@ -159,9 +159,13 @@ func main() {
 	r.Handle("/readyz", StatusHandler{StatusType: "readyz"})
 	r.Handle("/metrics", promhttp.Handler())
 
-	go func() {
-		log.Println(http.ListenAndServe("0.0.0.0:6060", nil))
-	}()
+	// Profiling endpoints
+	r.HandleFunc("/debug/pprof/", pprof.Index)
+	r.Handle("/debug/pprof/allocs", pprof.Handler("allocs"))
+	r.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
+	r.Handle("/debug/pprof/heap", pprof.Handler("heap"))
+	r.Handle("/debug/pprof/mutex", pprof.Handler("mutex"))
+	r.Handle("/debug/pprof/profile", pprof.Handler("profile"))
 
 	http.ListenAndServe(fmt.Sprintf(":%v", serverPort), r)
 }
