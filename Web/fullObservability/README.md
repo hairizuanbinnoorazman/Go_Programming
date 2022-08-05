@@ -20,5 +20,5 @@ Configuration - maybe use HPA to create large number of pods?
 ```bash
 # Profiling application
 # Ensure graphviz is installed as well
-go tool pprof -http=localhost:8500 http://localhost:6060/debug/pprof/heap
+go tool pprof -http=localhost:8500 http://localhost:8080/debug/pprof/heap
 ```
