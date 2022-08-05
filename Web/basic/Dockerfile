@@ -1,5 +1,6 @@
-FROM golang
-ADD . /go/src/github.com/knative/docs/helloworld
-RUN go install github.com/knative/docs/helloworld
-ENTRYPOINT /go/bin/helloworld
+FROM golang:1.18
+WORKDIR /helloworld
+ADD . .
+RUN go build -o app .
+CMD ["/helloworld/app"]
 EXPOSE 8080
