@@ -5,8 +5,6 @@ metadata:
     run: app
   name: app
   namespace: default
-  annotations:
-    sidecar.jaegertracing.io/inject: "true"
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -24,9 +22,11 @@ spec:
       labels:
         run: app
       annotations:
-        profefe.com/enable: "true"
-        profefe.com/port: "6060"
-        profefe.com/service: "app"
+        pyroscope.io/scrape: 'true'
+        pyroscope.io/application-name: 'app'
+        pyroscope.io/profile-cpu-enabled: 'true'
+        pyroscope.io/profile-mem-enabled: 'true'
+        pyroscope.io/port: '8080'
     spec:
       containers:
         - image: full-observability:v5
@@ -53,9 +53,6 @@ spec:
             - name: api
               protocol: TCP
               containerPort: 8080
-            - name: pprof
-              protocol: TCP
-              containerPort: 6060
           livenessProbe:
             httpGet:
               path: /healthz
@@ -74,8 +71,6 @@ metadata:
     run: app2
   name: app2
   namespace: default
-  annotations:
-    sidecar.jaegertracing.io/inject: "true"
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -93,9 +88,11 @@ spec:
       labels:
         run: app2
       annotations:
-        profefe.com/enable: "true"
-        profefe.com/port: "6060"
-        profefe.com/service: "app2"
+        pyroscope.io/scrape: 'true'
+        pyroscope.io/application-name: 'app2'
+        pyroscope.io/profile-cpu-enabled: 'true'
+        pyroscope.io/profile-mem-enabled: 'true'
+        pyroscope.io/port: '8080'
     spec:
       containers:
         - image: full-observability:v5
@@ -122,9 +119,6 @@ spec:
             - name: api
               protocol: TCP
               containerPort: 8080
-            - name: pprof
-              protocol: TCP
-              containerPort: 6060
           livenessProbe:
             httpGet:
               path: /healthz
@@ -159,8 +153,6 @@ metadata:
     run: app3
   name: app3
   namespace: default
-  annotations:
-    sidecar.jaegertracing.io/inject: "true"
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -178,9 +170,11 @@ spec:
       labels:
         run: app3
       annotations:
-        profefe.com/enable: "true"
-        profefe.com/port: "6060"
-        profefe.com/service: "app3"
+        pyroscope.io/scrape: 'true'
+        pyroscope.io/application-name: 'app3'
+        pyroscope.io/profile-cpu-enabled: 'true'
+        pyroscope.io/profile-mem-enabled: 'true'
+        pyroscope.io/port: '8080'
     spec:
       containers:
         - image: full-observability:v5
@@ -204,10 +198,7 @@ spec:
           ports:
             - name: api
               protocol: TCP
-              containerPort: 8080
-            - name: pprof
-              protocol: TCP
-              containerPort: 6060    
+              containerPort: 8080 
           livenessProbe:
             httpGet:
               path: /healthz
