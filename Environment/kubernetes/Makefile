@@ -1,4 +1,4 @@
-cluster_name?=cluster-2
+cluster_name?=cluster-1
 
 environment:
 	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
