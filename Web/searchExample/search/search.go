@@ -1,13 +1,13 @@
 package search
 
 import (
-	"time"
 	"errors"
+	"time"
 )
 
-type Result struct {Title, URL string}
+type Result struct{ Title, URL string }
 
-func Search(query string) ([]Result, error){
+func Search(query string) ([]Result, error) {
 	results := []Result{
 		Web(query),
 		Image(query),
@@ -25,7 +25,6 @@ func SearchParallel(query string) ([]Result, error) {
 	return []Result{<-c, <-c, <-c}, nil
 }
 
-
 func SearchTimeout(query string, timeout time.Duration) ([]Result, error) {
 	timer := time.After(timeout)
 	c := make(chan Result, 3)
@@ -35,13 +34,12 @@ func SearchTimeout(query string, timeout time.Duration) ([]Result, error) {
 
 	var results []Result
 	for i := 0; i < 3; i++ {
-		select{
-			case result := <- c:
-				results = append(results, result)
-			case <- timer:
-				return results, errors.New("timed out")
+		select {
+		case result := <-c:
+			results = append(results, result)
+		case <-timer:
+			return results, errors.New("timed out")
 		}
 	}
 	return results, nil
 }
-
