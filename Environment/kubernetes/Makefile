@@ -28,8 +28,9 @@ observability:
 	make buckets
 	helm upgrade --install -f loki.yaml loki grafana/loki-distributed
 	helm upgrade --install -f promtail.yaml promtail grafana/promtail
-	helm upgrade --install pyroscope pyroscope-io/pyroscope
+	helm upgrade --install -f pyroscope.yaml pyroscope pyroscope-io/pyroscope
 	helm upgrade --install -f tempo.yaml tempo grafana/tempo-distributed
+	helm upgrade --install -f grafana.yaml grafana grafana/grafana
 
 mailhog:
 	helm upgrade --install mailhog codecentric/mailhog
@@ -78,7 +79,7 @@ access-minio:
 	kubectl port-forward service/minio1-console 9090:9090
 
 access-grafana:
-	kubectl port-forward service/kube-prometheus-stack-grafana 3000:80
+	kubectl port-forward service/grafana 3000:80
 
 access-prometheus:
 	kubectl port-forward service/kube-prometheus-stack-prometheus 9090:9090
