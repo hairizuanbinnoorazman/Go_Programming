@@ -70,12 +70,92 @@ func (t *Tree) Print() {
 	t.root.Print()
 }
 
+func InorderPrint(root *Node) {
+	if root == nil {
+		return
+	}
+	if root.left != nil {
+		InorderPrint(root.left)
+	}
+	fmt.Println(root.data)
+	if root.right != nil {
+		InorderPrint(root.right)
+	}
+}
+
+func InsertNode(root *Node, item *Node) *Node {
+	if root == nil {
+		return item
+	}
+	if item.data < root.data {
+		if root.left != nil {
+			InsertNode(root.left, item)
+		} else {
+			root.left = item
+		}
+	}
+	if item.data > root.data {
+		if root.right != nil {
+			InsertNode(root.right, item)
+		} else {
+			root.right = item
+		}
+	}
+	return root
+}
+
+func ReverseBinaryTree(root *Node) {
+	if root == nil {
+		return
+	}
+	temp := root.left
+	temp2 := root.right
+	root.right = temp
+	root.left = temp2
+	if root.left != nil {
+		ReverseBinaryTree(root.left)
+	}
+	if root.right != nil {
+		ReverseBinaryTree(root.right)
+	}
+	return
+}
+
 func main() {
-	hehe := Tree{}
-	hehe.Insert(6)
-	hehe.Insert(8)
-	hehe.Insert(10)
-	hehe.Insert(12)
-	hehe.Insert(3)
-	hehe.Print()
+	// hehe := Tree{}
+	// hehe.Insert("A")
+	// hehe.Insert("B")
+	// hehe.Insert("C")
+	// hehe.Insert("D")
+	// hehe.Insert("E")
+	// hehe.Print()
+
+	A := Node{data: 9}
+	B := Node{data: 2}
+	C := Node{data: 12}
+	D := Node{data: 4}
+	E := Node{data: 5}
+	F := Node{data: -2}
+	G := Node{data: 7}
+
+	// A.left = &B
+	// A.right = &C
+	// B.left = &D
+	// B.right = &E
+	// C.left = &F
+	// C.right = &G
+
+	aa := InsertNode(nil, &D)
+	aa = InsertNode(aa, &E)
+	aa = InsertNode(aa, &C)
+	aa = InsertNode(aa, &A)
+	aa = InsertNode(aa, &B)
+	aa = InsertNode(aa, &G)
+	aa = InsertNode(aa, &F)
+
+	InorderPrint(aa)
+	fmt.Println("reversing")
+	ReverseBinaryTree(aa)
+	fmt.Println("2nd print")
+	InorderPrint(aa)
 }
