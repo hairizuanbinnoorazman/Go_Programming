@@ -11,7 +11,7 @@ prometheus:
     serviceMonitorSelector:
       matchLabels: {}
 grafana:
-  enabled: true
+  enabled: false
   additionalDataSources:
     - name: Tempo
       type: tempo
