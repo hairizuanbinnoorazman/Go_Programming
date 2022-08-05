@@ -14,6 +14,7 @@ environment:
 	helm repo add hashicorp https://helm.releases.hashicorp.com
 	helm repo add argo https://argoproj.github.io/argo-helm
 	helm repo add gatekeeper https://open-policy-agent.github.io/gatekeeper/charts
+	helm repo add pyroscope-io https://pyroscope-io.github.io/helm-chart
 	helm repo update
 
 cluster:
@@ -27,8 +28,8 @@ observability:
 	make buckets
 	helm upgrade --install -f loki.yaml loki grafana/loki-distributed
 	helm upgrade --install -f promtail.yaml promtail grafana/promtail
+	helm upgrade --install pyroscope pyroscope-io/pyroscope
 	helm upgrade --install -f tempo.yaml tempo grafana/tempo-distributed
-	kubectl apply -f profefe.yaml
 
 mailhog:
 	helm upgrade --install mailhog codecentric/mailhog
