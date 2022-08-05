@@ -1,0 +1,15 @@
+version: '3.3'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080
+  prometheus:
+    build:
+      context: .
+      dockerfile: prom.Dockerfile
+    ports:
+      - 9090:9090
