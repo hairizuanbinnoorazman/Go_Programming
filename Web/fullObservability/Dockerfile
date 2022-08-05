@@ -1,7 +1,8 @@
-FROM golang
-ADD . /go/src/github.com/hairizuanbinnoorazman/full-observability
-WORKDIR /go/src/github.com/hairizuanbinnoorazman/full-observability
-RUN go get
-RUN go install github.com/hairizuanbinnoorazman/full-observability
-ENTRYPOINT ["/go/bin/full-observability"]
-EXPOSE 8080 6060
+FROM golang:1.18
+WORKDIR /full-observability
+ADD go.mod go.sum .
+RUN go mod download
+ADD . .
+RUN go build -o app .
+CMD ["/full-observability/app"]
+EXPOSE 8080
