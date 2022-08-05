@@ -165,7 +165,7 @@ func main() {
 	r.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
 	r.Handle("/debug/pprof/heap", pprof.Handler("heap"))
 	r.Handle("/debug/pprof/mutex", pprof.Handler("mutex"))
-	r.Handle("/debug/pprof/profile", pprof.Handler("profile"))
+	r.HandleFunc("/debug/pprof/profile", pprof.Profile)
 
 	http.ListenAndServe(fmt.Sprintf(":%v", serverPort), r)
 }
