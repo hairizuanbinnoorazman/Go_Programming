@@ -86,13 +86,6 @@ func main() {
 
 }
 
-func yolo() {
-	for {
-		fmt.Println("Doing something else")
-		time.Sleep(5 * time.Second)
-	}
-}
-
 func zzz(ctx context.Context) {
 	for {
 		// get pods in all the namespaces by omitting namespace
