@@ -1,0 +1,101 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: leader-election-app
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: leader-election-configmaps
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["configmaps"]
+  verbs: ["get", "watch", "list", "create", "update"]
+- apiGroups: ["coordination.k8s.io"]
+  resources: ["leases"]
+  verbs: ["get", "list", "watch", "create", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: leader-election-configmaps
+subjects:
+  - kind: ServiceAccount
+    name: leader-election-app
+    namespace: default
+roleRef:
+  kind: Role 
+  name: leader-election-configmaps
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: leader-election-pod-reader
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: leader-election-pod-reader
+subjects:
+  - kind: ServiceAccount
+    name: leader-election-app
+    namespace: default
+roleRef:
+  kind: ClusterRole 
+  name: leader-election-pod-reader
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    run: app
+  name: app
+  namespace: default
+spec:
+  serviceName: app
+  replicas: 2
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      run: app
+  template:
+    metadata:
+      labels:
+        run: app
+    spec:
+      serviceAccountName: leader-election-app
+      containers:
+        - image: leader-election:v5
+          imagePullPolicy: Always
+          name: app
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          ports:
+            - name: api
+              protocol: TCP
+              containerPort: 8080
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app
+  labels:
+    run: app
+spec:
+  ports:
+  - port: 8080
+    name: api
+  clusterIP: None
+  selector:
+    run: app
