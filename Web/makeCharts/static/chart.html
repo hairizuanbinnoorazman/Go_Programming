@@ -1,0 +1,49 @@
+<html>
+    <head>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    </head>
+    <body>
+        <div>
+            <canvas id="myChart"></canvas>
+        </div>
+        <script>
+            const labels = [
+                {{ range $i, $v := .Labels }}
+                    {{- $v -}},
+                {{ end -}}
+            ];
+          
+            const data = {
+                labels: labels,
+                datasets: [{
+                    label: {{ .XaxisTitle }},
+                    backgroundColor: 'rgb(255, 99, 132)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    data: [
+                        {{ range $i, $v := .Data }}
+                            {{- $v -}},
+                        {{ end -}}
+                    ],
+                }]
+            };
+          
+            const config = {
+                type: 'line',
+                data: data,
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: {{ .Title }}
+                        }
+                    }
+                }
+            };
+            
+            const myChart = new Chart(
+                document.getElementById('myChart'),
+                config
+            );
+        </script>
+    </body>
+</html>
