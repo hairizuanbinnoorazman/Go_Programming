@@ -180,6 +180,13 @@ func (s *SendEmail) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// if _, err = buf.WriteTo(wc); err != nil {
 	// 	log.Fatal(err)
 	// }
+	type sendEmailResponse struct {
+		Status string `json:"status"`
+	}
+
+	sendEmailRespRaw, _ := json.Marshal(sendEmailResponse{Status: "Sent"})
+	w.Write(sendEmailRespRaw)
+	w.WriteHeader(http.StatusOK)
 }
 
 func (s *SendEmail) downloadFile(ctx context.Context, fileName string) error {
