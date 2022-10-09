@@ -89,7 +89,7 @@ func (s *ScreenshotIt) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err := chromedp.Run(ctx, fullScreenshot(structURL, 90, &buf)); err != nil {
 		log.Fatal(err)
 	}
-	fileName := strings.ReplaceAll(d.Title+".png", " ", "_")
+	fileName := strings.ReplaceAll(d.Title+".jpeg", " ", "_")
 	if err := ioutil.WriteFile(fileName, buf, 0o644); err != nil {
 		log.Fatal(err)
 	}
@@ -103,10 +103,10 @@ func (s *ScreenshotIt) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type resp struct {
-		URL string `json:"url"`
+		FileName string `json:"filename"`
 	}
 
-	outputResp := resp{URL: "https://storage.googleapis.com/" + s.BucketName + "/" + fileName}
+	outputResp := resp{FileName: fileName}
 	outputRaw, _ := json.Marshal(outputResp)
 
 	w.Write(outputRaw)
@@ -139,10 +139,10 @@ func uploadFile(bucket, object, filename string) error {
 		return fmt.Errorf("Writer.Close: %v", err)
 	}
 
-	acl := client.Bucket(bucket).Object(object).ACL()
-	if err := acl.Set(ctx, storage.AllUsers, storage.RoleReader); err != nil {
-		return fmt.Errorf("ACLHandle.Set: %v", err)
-	}
+	// acl := client.Bucket(bucket).Object(object).ACL()
+	// if err := acl.Set(ctx, storage.AllUsers, storage.RoleReader); err != nil {
+	// 	return fmt.Errorf("ACLHandle.Set: %v", err)
+	// }
 	return nil
 }
 
