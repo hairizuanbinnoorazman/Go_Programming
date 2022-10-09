@@ -123,6 +123,14 @@ func (c *CreateReport) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c.uploadFile(ctx, outputFileName)
+
+	type createReportResponse struct {
+		GeneratedReportName string `json:"generated_report_name"`
+	}
+
+	createReportRespRaw, _ := json.Marshal(createReportResponse{GeneratedReportName: outputFileName})
+	w.Write(createReportRespRaw)
+	w.WriteHeader(http.StatusCreated)
 }
 
 func (c *CreateReport) downloadFile(ctx context.Context, fileName string) error {
