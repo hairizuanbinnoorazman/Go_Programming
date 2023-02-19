@@ -1,3 +1,5 @@
+# Default behaviour of autoscaler:
+# https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#default-behavior
 apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
 metadata:

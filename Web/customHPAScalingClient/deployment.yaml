@@ -20,6 +20,6 @@ spec:
         command: ["/home/custom"]
         env:
           - name: QUEUE_ITEM_SERVER
-            value: "http://custom-hpa:8080/dec"
+            value: "http://custom-hpa-server:8080/dec"
           - name: QUEUE_ITEM_CONSUMPTION
             value: "10"

@@ -17,3 +17,11 @@ make deploy
 # To drop the components
 make drop
 ```
+
+## Metrics to be used in grafana for comparison
+
+Count of number of pods  
+`sum(kube_pod_container_info{container="custom-hpa-client"})`
+
+Number of items in queue
+`testservice_generated_queue_item`
