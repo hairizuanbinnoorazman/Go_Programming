@@ -1,11 +1,14 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name:  custom-hpa
+  name: custom-hpa-server
+  labels:
+    app: custom-hpa-server
+    component: custom-hpa-server
 spec:
   selector:
-    app:  custom-hpa
-    component: custom-hpa
+    app: custom-hpa-server
+    component: custom-hpa-server
   type: ClusterIP
   ports:
   - name:  http

@@ -1,26 +1,47 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: custom-hpa
+  name: custom-hpa-server
+  labels:
+    app: custom-hpa-server
+    component: custom-hpa-server
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app:  custom-hpa
-      component: custom-hpa
+      app: custom-hpa-server
+      component: custom-hpa-server
   template:
     metadata:
       labels:
-        app:  custom-hpa
-        component: custom-hpa
+        app: custom-hpa-server
+        component: custom-hpa-server
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "8080"
     spec:
       containers:
-      - name: custom-hpa
-        image: custom-hpa:v3
+      - name: custom-hpa-server
+        image: custom-hpa-server:v3
         command: ["/home/custom"]
         env:
           - name: QUEUE_ITEM_GENERATION
             value: "75"
+        ports:
+          - name: http
+            containerPort: 8080
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: custom-hpa-server
+  labels:
+    app: custom-hpa-server
+    component: custom-hpa-server
+spec:
+  selector:
+    matchLabels:
+      app: custom-hpa-server
+      component: custom-hpa-server
+  endpoints:
+    - port: http
