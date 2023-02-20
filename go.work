@@ -1,9 +1,11 @@
 go 1.18
 
 use (
+	./Web/basicGRPC
 	./Web/basicMigrate
 	./Web/customHPAScalingClient
 	./Web/customHPAScalingServer
 	./Web/fullObservability
+	./Web/leaderElectionWithK8s
 	./Web/sendEmail
 )
