@@ -1,0 +1,9 @@
+go 1.18
+
+use (
+	./Web/basicMigrate
+	./Web/customHPAScalingClient
+	./Web/customHPAScalingServer
+	./Web/fullObservability
+	./Web/sendEmail
+)
