@@ -21,6 +21,11 @@ cluster:
 	gcloud beta container clusters create $(cluster_name) --zone "asia-southeast1-a" --no-enable-basic-auth --machine-type "e2-standard-4" --disk-type "pd-standard" --disk-size "100" --metadata disable-legacy-endpoints=true --max-pods-per-node "110" --num-nodes "3" --enable-ip-alias --no-enable-intra-node-visibility --default-max-pods-per-node "110" --no-enable-master-authorized-networks --addons HorizontalPodAutoscaling,HttpLoadBalancing,GcePersistentDiskCsiDriver --enable-autoupgrade --enable-autorepair --max-surge-upgrade 1 --max-unavailable-upgrade 0 --enable-shielded-nodes --node-locations "asia-southeast1-a" --logging=NONE --monitoring=NONE
 	gcloud container clusters get-credentials $(cluster_name) --zone asia-southeast1-a
 
+monitoring:
+	helm upgrade --install -f prom.yaml kube-prometheus-stack prometheus-community/kube-prometheus-stack
+	helm upgrade --install -f adapter.yaml prometheus-adapter prometheus-community/prometheus-adapter
+	helm upgrade --install -f grafana.yaml grafana grafana/grafana
+
 observability:
 	helm upgrade --install -f prom.yaml kube-prometheus-stack prometheus-community/kube-prometheus-stack
 	helm upgrade --install -f minio.yaml minio-operator minio/minio-operator
