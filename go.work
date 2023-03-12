@@ -1,6 +1,7 @@
 go 1.18
 
 use (
+	./Web/analytics
 	./Web/basicGRPC
 	./Web/basicMigrate
 	./Web/customHPAScalingClient
