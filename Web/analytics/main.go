@@ -51,8 +51,6 @@ type GoogleAnalyticsParameters struct {
 
 type analytics struct{}
 
-// example request:
-// http://localhost:8080/analytics/collect?v=1&_v=j99&a=1160670874&t=pageview&_s=1&dl=http%3A%2F%2Flocalhost%2Findex&ul=en-us&de=UTF-8&sd=24-bit&sr=1920x1080&vp=1920x487&je=0&_u=QACAAUABAAAAAAAAII~&jid=&gjid=&cid=329073308.1678561437&tid=UA-93097338-1&_gid=1043476193.1678561437&_fplc=0&gtm=457e3360&z=1118969917
 // Reference:
 // https://www.thyngster.com/ga4-measurement-protocol-cheatsheet/
 func (a *analytics) ServeHTTP(w http.ResponseWriter, r *http.Request) {
