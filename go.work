@@ -4,9 +4,14 @@ use (
 	./Web/analytics
 	./Web/basicGRPC
 	./Web/basicMigrate
+	./Web/basicPrometheus
+	./Web/cooklang
 	./Web/customHPAScalingClient
 	./Web/customHPAScalingServer
 	./Web/fullObservability
 	./Web/leaderElectionWithK8s
 	./Web/sendEmail
+	./web/basic
+	./web/basicFileNotify
+	./web/basicGenerics
 )
