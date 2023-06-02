@@ -36,5 +36,5 @@ func main() {
 
 	http.HandleFunc("/", handler)
 	http.Handle("/struct", &HandleViaStruct{})
-	http.ListenAndServe(":8080", nil)
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
