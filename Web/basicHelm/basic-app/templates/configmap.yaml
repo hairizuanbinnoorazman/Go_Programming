@@ -8,6 +8,5 @@ metadata:
     "helm.sh/hook-delete-policy": before-hook-creation
 data:
   game.properties: |
-    lol: caca
-    miao: zzz
+    {{- .Values.appConfig | nindent 4 }}
   

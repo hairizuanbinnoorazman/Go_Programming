@@ -2,7 +2,7 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-replicaCount: 5
+replicaCount: 1
 
 image:
   repository: gcr.io/XXXXX/yahoo
@@ -78,3 +78,7 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+appConfig: |
+  lol: caca
+  miao: zzz

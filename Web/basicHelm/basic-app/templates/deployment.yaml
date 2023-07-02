@@ -42,9 +42,11 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: WAIT_TIME
-              value: "0"
+              value: "2"
             - name: TARGET
               value: Lola
+            - name: CONFIG_FILE_LOCATION
+              value: "/etc/foo/game.yaml"
           volumeMounts:
             - name: foo
               mountPath: "/etc/foo"
@@ -57,10 +59,12 @@ spec:
             httpGet:
               path: /
               port: http
+            timeoutSeconds: 5
           readinessProbe:
             httpGet:
               path: /
               port: http
+            timeoutSeconds: 5
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
