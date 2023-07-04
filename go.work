@@ -1,6 +1,8 @@
 go 1.18
 
 use (
+	./Apps/bus-arrival
+	./Apps/shopping-list
 	./Web/analytics
 	./Web/basicGRPC
 	./Web/basicMigrate
