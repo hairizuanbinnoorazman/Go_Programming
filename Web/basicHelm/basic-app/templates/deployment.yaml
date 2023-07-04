@@ -13,10 +13,11 @@ spec:
       {{- include "basic-app.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-    {{- with .Values.podAnnotations }}
       annotations:
+        configmap-hash: {{ .Values.appConfig | sha256sum }}
+      {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-    {{- end }}
+      {{- end }}
       labels:
         {{- include "basic-app.selectorLabels" . | nindent 8 }}
     spec:

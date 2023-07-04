@@ -1,0 +1,8 @@
+image:
+  repository: gcr.io/xxx/yahoo
+  tag: v30
+
+appConfig: |
+  lol: caca
+  miao: zzz
+  caa: zoal
