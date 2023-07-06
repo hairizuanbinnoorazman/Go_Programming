@@ -1,0 +1,30 @@
+version: '3.3'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      ADMIN_USER: admin
+      ADMIN_PASS: admin
+      HASH_KEY: 08f2b734095b22a46f35dfb2ac2c55c2
+      BLOCK_KEY: 08f2b734095b22a46f35dfb2ac2c55c2
+      COOKIE_NAME: shopping-list
+      DATASTORE_PROJECT_ID: test
+      DATASTORE_EMULATOR_HOST: db:8081
+    ports:
+      - 8880:8080
+    restart: on-failure
+  db:
+    image: google/cloud-sdk:437.0.1
+    command:
+      - "gcloud"
+      - "beta"
+      - "emulators"
+      - "datastore"
+      - "start"
+      - "--project=test"
+      - "--host-port=0.0.0.0:8081"
+
+
