@@ -214,6 +214,7 @@ var (
 )
 
 type ShoppingItem struct {
+	ID      *datastore.key `datastore:"__key__"`
 	Name    string
 	Created time.Time
 	Status  status
