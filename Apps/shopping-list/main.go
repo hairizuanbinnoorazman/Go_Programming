@@ -53,29 +53,29 @@ func main() {
 
 	hashKey := os.Getenv("HASH_KEY")
 	if hashKey == "" {
-		log.Println("no admin pass set")
+		log.Println("no hash key set")
 		os.Exit(1)
 	}
 
 	blockKey := os.Getenv("BLOCK_KEY")
 	if blockKey == "" {
-		log.Println("no admin pass set")
+		log.Println("no block key set")
 		os.Exit(1)
 	}
 
 	cookieName := os.Getenv("COOKIE_NAME")
 	if cookieName == "" {
-		log.Println("no admin pass set")
+		log.Println("no cookie name set")
 		os.Exit(1)
 	}
 
-	projectID := os.Getenv("DATASTORE_PROJECT_ID")
-	if cookieName == "" {
-		log.Println("no project id set")
-		os.Exit(1)
-	}
+	// projectID := os.Getenv("DATASTORE_PROJECT_ID")
+	// if cookieName == "" {
+	// 	log.Println("no project id set")
+	// 	os.Exit(1)
+	// }
 
-	dsClient, err := datastore.NewClient(context.TODO(), projectID)
+	dsClient, err := datastore.NewClient(context.TODO(), "")
 	if err != nil {
 		logger.Fatalf("unable to connect to datastore")
 		panic("failed")
@@ -388,6 +388,10 @@ func (h ListShoppingItems) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("bad request"))
 		return
+	}
+
+	if items == nil {
+		items = []ShoppingItem{}
 	}
 
 	resp := map[string]interface{}{}
