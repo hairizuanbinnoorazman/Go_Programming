@@ -93,6 +93,16 @@ func main() {
 		Datastore:   *dsClient,
 		EntityTable: entityTable,
 	}).Methods("GET")
+	r.Handle("/api/shopping-list/v1/item/{id}", ModifyShoppingItem{
+		Logger:      logger,
+		Datastore:   *dsClient,
+		EntityTable: entityTable,
+	}).Methods("PATCH")
+	r.Handle("/api/shopping-list/v1/item/{id}", DeleteShoppingItem{
+		Logger:      logger,
+		Datastore:   *dsClient,
+		EntityTable: entityTable,
+	}).Methods("DELETE")
 	srv := http.Server{
 		Handler: r,
 		Addr:    fmt.Sprintf("%v:%v", "0.0.0.0", "8080"),
@@ -271,6 +281,55 @@ type ModifyShoppingItem struct {
 func (h ModifyShoppingItem) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.Logger.Infof("start ModifyShoppingItem handler")
 	defer h.Logger.Infof("end ModifyShoppingItem handler")
+
+	ctx := r.Context()
+
+	params := mux.Vars(r)
+	id := params["id"]
+
+	k, err := datastore.DecodeKey(id)
+	if err != nil {
+		h.Logger.Errorf("unable to decode key :: %v", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("unable to decode id key"))
+		return
+	}
+
+	var item ShoppingItem
+	err = h.Datastore.Get(ctx, k, &item)
+	if err != nil {
+		h.Logger.Errorf("unable to get key from datastore :: %v", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("unable to get item from datastore"))
+		return
+	}
+
+	type updateShoppingItemReq struct {
+		Status status `json:"status"`
+	}
+
+	raw, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		h.Logger.Errorf("unable to get json body from http body :: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("unable to get json body from http body"))
+		return
+	}
+
+	var ur updateShoppingItemReq
+	json.Unmarshal(raw, &ur)
+
+	item.Status = ur.Status
+	_, err = h.Datastore.Put(ctx, k, &item)
+	if err != nil {
+		h.Logger.Errorf("unable to update item :: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("unable to update item"))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("update ok"))
 }
 
 type DeleteShoppingItem struct {
