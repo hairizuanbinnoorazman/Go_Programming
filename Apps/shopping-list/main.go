@@ -214,7 +214,7 @@ var (
 )
 
 type ShoppingItem struct {
-	ID      *datastore.key `datastore:"__key__"`
+	ID      *datastore.Key `datastore:"__key__"`
 	Name    string
 	Created time.Time
 	Status  status
@@ -263,8 +263,9 @@ func (h AddShoppingItem) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 type ModifyShoppingItem struct {
-	Logger    Logger
-	Datastore datastore.Client
+	Logger      Logger
+	Datastore   datastore.Client
+	EntityTable string
 }
 
 func (h ModifyShoppingItem) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -273,13 +274,38 @@ func (h ModifyShoppingItem) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 type DeleteShoppingItem struct {
-	Logger    Logger
-	Datastore datastore.Client
+	Logger      Logger
+	Datastore   datastore.Client
+	EntityTable string
 }
 
 func (h DeleteShoppingItem) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.Logger.Infof("start DeleteShoppingItem handler")
 	defer h.Logger.Infof("end DeleteShoppingItem handler")
+
+	ctx := r.Context()
+
+	params := mux.Vars(r)
+	id := params["id"]
+
+	k, err := datastore.DecodeKey(id)
+	if err != nil {
+		h.Logger.Errorf("unable to decode key :: %v", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("unable to decode id key"))
+		return
+	}
+
+	err = h.Datastore.Delete(ctx, k)
+	if err != nil {
+		h.Logger.Errorf("unable to delete key :: %v", k.Name)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("unable to delete key"))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("delete ok"))
 }
 
 type ListShoppingItems struct {
