@@ -82,6 +82,9 @@ func main() {
 	}
 
 	r := mux.NewRouter()
+	r.NotFoundHandler = NotFound{
+		Logger: logger,
+	}
 	r.Handle("/login", Login{Logger: logger, AdminUser: adminUser, AdminPass: adminPassword})
 	r.Handle("/api/shopping-list/v1/item", AddShoppingItem{
 		Logger:      logger,
