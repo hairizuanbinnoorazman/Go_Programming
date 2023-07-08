@@ -103,6 +103,9 @@ func main() {
 		Datastore:   *dsClient,
 		EntityTable: entityTable,
 	}).Methods("DELETE")
+
+	addFrontendRoutes(r)
+
 	srv := http.Server{
 		Handler: r,
 		Addr:    fmt.Sprintf("%v:%v", "0.0.0.0", "8080"),
@@ -224,10 +227,10 @@ var (
 )
 
 type ShoppingItem struct {
-	ID      *datastore.Key `datastore:"__key__"`
-	Name    string
-	Created time.Time
-	Status  status
+	ID      *datastore.Key `datastore:"__key__",json:"id"`
+	Name    string         `json:"name"`
+	Created time.Time      `json:"created"`
+	Status  status         `json:"status"`
 }
 
 type AddShoppingItem struct {
