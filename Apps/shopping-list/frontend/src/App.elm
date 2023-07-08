@@ -90,6 +90,10 @@ type Msg
     | ValueChanged String
     | GetShoppingItemListResponse (Result Http.Error ShoppingItemListResp)
     | SingleItemClicked ShoppingItem
+    | ToggleShoppingItem (Result Http.Error ())
+    | DeleteShoppingItemResponse (Result Http.Error ())
+    | CreateShoppingItemResponse (Result Http.Error ())
+    | ClearClicked
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -114,7 +118,7 @@ update msg model =
             ( { model | dialogOpen = True, dialogItem = "" }, Cmd.none )
 
         Closed ->
-            ( { model | dialogOpen = False, dialogItem = "" }, Cmd.none )
+            ( { model | dialogOpen = False, dialogItem = "" }, Cmd.batch [ apiCreateShoppingItem model.serverSettings.serverEndpoint model.dialogItem ] )
 
         ValueChanged zzz ->
             ( { model | dialogItem = zzz }, Cmd.none )
@@ -132,7 +136,57 @@ update msg model =
                 updatedItems =
                     List.map (toggleStatus item.id) model.shoppingItems
             in
-            ( { model | shoppingItems = updatedItems }, Cmd.none )
+            ( { model | shoppingItems = updatedItems }, Cmd.batch [ apiUpdateShoppingItem model.serverSettings.serverEndpoint item.id (toggleStatusString item.status) ] )
+
+        ToggleShoppingItem result ->
+            ( model, Cmd.none )
+
+        DeleteShoppingItemResponse result ->
+            ( model, Cmd.none )
+
+        CreateShoppingItemResponse result ->
+            ( model, Cmd.batch [ apiListShoppingItems model.serverSettings.serverEndpoint ] )
+
+        ClearClicked ->
+            let
+                incartItems =
+                    List.filter (filterItem "in-cart") model.shoppingItems
+
+                activeItems =
+                    List.filter (filterItem "active") model.shoppingItems
+
+                deleteCommands =
+                    deleteCmds model.serverSettings.serverEndpoint incartItems
+            in
+            ( { model | shoppingItems = activeItems }, Cmd.batch deleteCommands )
+
+
+deleteCmds : String -> List ShoppingItem -> List (Cmd Msg)
+deleteCmds mgrUrl items =
+    List.map (deleteCmd mgrUrl) items
+
+
+deleteCmd : String -> ShoppingItem -> Cmd Msg
+deleteCmd mgrURL item =
+    apiDeleteShoppingItem mgrURL item.id
+
+
+filterItem : String -> ShoppingItem -> Bool
+filterItem status item =
+    if item.status == status then
+        True
+
+    else
+        False
+
+
+toggleStatusString : String -> String
+toggleStatusString status =
+    if status == "active" then
+        "in-cart"
+
+    else
+        "active"
 
 
 toggleStatus : String -> ShoppingItem -> ShoppingItem
@@ -209,6 +263,9 @@ view model =
             , Button.text
                 (Button.config |> Button.setOnClick Clicked)
                 "Add item"
+            , Button.text
+                (Button.config |> Button.setOnClick ClearClicked)
+                "Clear in-cart items"
             , LayoutGrid.inner []
                 [ LayoutGrid.cell []
                     [ List.list List.config
@@ -274,4 +331,65 @@ apiListShoppingItems mgrURL =
         , timeout = Nothing
         , tracker = Nothing
         , expect = Http.expectJson GetShoppingItemListResponse shoppingItemListDecoder
+        }
+
+
+apiCreateShoppingItem : String -> String -> Cmd Msg
+apiCreateShoppingItem mgrURL name =
+    let
+        url =
+            mgrURL ++ "/api/shopping-list/v1/item"
+
+        statusBody =
+            Http.jsonBody <|
+                Encode.object
+                    [ ( "name", Encode.string name ) ]
+    in
+    Http.request
+        { body = statusBody
+        , method = "POST"
+        , url = url
+        , headers = []
+        , timeout = Nothing
+        , tracker = Nothing
+        , expect = Http.expectWhatever CreateShoppingItemResponse
+        }
+
+
+apiUpdateShoppingItem : String -> String -> String -> Cmd Msg
+apiUpdateShoppingItem mgrURL shoppingItemID status =
+    let
+        url =
+            mgrURL ++ "/api/shopping-list/v1/item/" ++ shoppingItemID
+
+        statusBody =
+            Http.jsonBody <|
+                Encode.object
+                    [ ( "status", Encode.string status ) ]
+    in
+    Http.request
+        { body = statusBody
+        , method = "PATCH"
+        , url = url
+        , headers = []
+        , timeout = Nothing
+        , tracker = Nothing
+        , expect = Http.expectWhatever ToggleShoppingItem
+        }
+
+
+apiDeleteShoppingItem : String -> String -> Cmd Msg
+apiDeleteShoppingItem mgrURL shoppingItemID =
+    let
+        url =
+            mgrURL ++ "/api/shopping-list/v1/item/" ++ shoppingItemID
+    in
+    Http.request
+        { body = Http.emptyBody
+        , method = "DELETE"
+        , url = url
+        , headers = []
+        , timeout = Nothing
+        , tracker = Nothing
+        , expect = Http.expectWhatever DeleteShoppingItemResponse
         }
