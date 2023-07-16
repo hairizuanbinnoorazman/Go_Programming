@@ -70,3 +70,11 @@ func (u *User) setPassword(password string) error {
 	}
 	return errPasswordInvalid
 }
+
+func (u *User) IsPasswordCorrect(password string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
+	if err != nil {
+		return false
+	}
+	return true
+}
