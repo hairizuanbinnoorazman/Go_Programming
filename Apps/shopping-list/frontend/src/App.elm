@@ -51,18 +51,18 @@ type Page
     = Index
 
 
-urlToPage : Url.Url -> Page
-urlToPage url =
+urlToPage : String -> Url.Url -> Page
+urlToPage ingressPath url =
     url
-        |> Url.parse urlParser
+        |> Url.parse (urlParser ingressPath)
         |> Maybe.withDefault Index
 
 
-urlParser : Parser (Page -> a) a
-urlParser =
+urlParser : String -> Parser (Page -> a) a
+urlParser ingressPath =
     -- We try to match one of the following URLs
     Url.oneOf
-        [ Url.map Index Url.top
+        [ Url.map Index (Url.s ingressPath </> Url.top)
         ]
 
 
@@ -72,14 +72,14 @@ init flags url key =
         initialAppState =
             { key = key
             , url = url
-            , page = urlToPage url
+            , page = urlToPage flags.ingressPath url
             , serverSettings = flags
             , dialogOpen = False
             , dialogItem = ""
             , shoppingItems = []
             }
     in
-    ( initialAppState, Cmd.batch [ Nav.pushUrl key "/", apiListShoppingItems flags.serverEndpoint ] )
+    ( initialAppState, Cmd.batch [ Nav.pushUrl key (flags.ingressPath ++ "/"), apiListShoppingItems flags.serverEndpoint ] )
 
 
 type Msg
@@ -258,7 +258,7 @@ view model =
                     "Submit"
                 ]
             }
-        , LayoutGrid.layoutGrid []
+        , LayoutGrid.layoutGrid [ LayoutGrid.span12 ]
             [ h1 [] [ text "Shopping List" ]
             , Button.text
                 (Button.config |> Button.setOnClick Clicked)
@@ -267,7 +267,7 @@ view model =
                 (Button.config |> Button.setOnClick ClearClicked)
                 "Clear in-cart items"
             , LayoutGrid.inner []
-                [ LayoutGrid.cell []
+                [ LayoutGrid.cell [ LayoutGrid.span12 ]
                     [ List.list List.config
                         (ListItem.listItem ListItem.config
                             [ h2 [] [ text "Shopping Items" ] ]
