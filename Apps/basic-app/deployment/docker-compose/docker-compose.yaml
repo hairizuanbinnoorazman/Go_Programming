@@ -1,0 +1,39 @@
+version: '3.3'
+
+services:
+  server:
+    build:
+      context: "../../"
+      dockerfile: Dockerfile
+    ports:
+      - 8880:8080
+    volumes:
+      - ../../cmd/backend/configuration:/root/configuration
+      - ../../cmd/frontend/files:/root/frontend
+    command:
+      - "app"
+      - "server"
+      - "-c"
+      - "/root/configuration/config.yaml"
+    restart: always
+  migrate:
+    build:
+      context: "../../"
+      dockerfile: Dockerfile
+    volumes:
+      - ../../cmd/backend/configuration:/root/configuration
+    command:
+      - "app"
+      - "migrate"
+      - "-c"
+      - "/root/configuration/config.yaml"
+    restart: on-failure
+  db:
+    image: mariadb:10.6.13
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: basic
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password

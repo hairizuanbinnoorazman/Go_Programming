@@ -1,0 +1,18 @@
+server:
+  host: 0.0.0.0
+  port: 8080
+  ingressPath: ""
+  redirectUri: ""
+  cookie:
+    hash_key: 0fc2c8c96b99bba9e90a6d7ec30fdc60
+    block_key: d81c6ebc208117795494091015511059
+admin:
+  username: admin
+  password: admin
+db:
+  host: db
+  port: 3306
+  dbname: basic
+  user: user
+  password: password
+
