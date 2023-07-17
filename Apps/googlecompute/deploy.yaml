@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: app
+  name: app
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app
+  template:
+    metadata:
+      labels:
+        app: app
+    spec:
+      containers:
+      - image: gcr.io/XXX/googlecompute:v1
+        imagePullPolicy: IfNotPresent
+        name: googlecompute
+        env:
+        - name: GCP_PROJECT_ID
+          value: XXX
+        - name: REGION
+          value: us-central1-a
+        resources:
+          limits:
+            cpu: 200m
+            ephemeral-storage: 1Gi
+            memory: 1Gi
+          requests:
+            cpu: 100m
+            ephemeral-storage: 1Gi
+            memory: 500Mi
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always

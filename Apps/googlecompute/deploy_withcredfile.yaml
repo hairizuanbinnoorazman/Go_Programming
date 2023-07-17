@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: app
+  name: app
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app
+  template:
+    metadata:
+      labels:
+        app: app
+    spec:
+      containers:
+      - image: gcr.io/XXX/googlecompute:v2
+        imagePullPolicy: IfNotPresent
+        name: googlecompute
+        env:
+        - name: GCP_PROJECT_ID
+          value: XXX
+        - name: REGION
+          value: us-central1-a
+        - name: SERVICE_ACCOUNT_FILE
+          value: /var/googlecompute/credfile
+        resources:
+          limits:
+            cpu: 200m
+            ephemeral-storage: 1Gi
+            memory: 1Gi
+          requests:
+            cpu: 100m
+            ephemeral-storage: 1Gi
+            memory: 500Mi
+        volumeMounts:
+        - mountPath: "/var/googlecompute"
+          name: cred-file
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      volumes:
+      - name: cred-file
+        secret:
+          secretName: cred-file
+          items:
+          - key: credfile
+            path: credfile
+
+
+
+
+
