@@ -20,6 +20,9 @@ deploy-withcred:
 	kubectl apply -f correcteddeploy.yaml
 	rm correcteddeploy.yaml
 
+run-app:
+	SERVICE_ACCOUNT_FILE=key.json GCP_PROJECT_ID=$(gcpproject) REGION=us-central1-a ./app
+
 create-service-acct:
 	gcloud iam service-accounts create sample-google-compute
 
