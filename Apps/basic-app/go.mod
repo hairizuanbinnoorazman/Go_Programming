@@ -19,16 +19,19 @@ require (
 )
 
 require (
+	github.com/denisenkom/go-mssqldb v0.10.0 // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
-	github.com/go-stack/stack v1.8.0 // indirect
+	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
+	github.com/opencontainers/image-spec v1.1.0-rc2 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	go.uber.org/atomic v1.7.0 // indirect
+	github.com/stretchr/testify v1.8.2 // indirect
+	go.uber.org/atomic v1.9.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
