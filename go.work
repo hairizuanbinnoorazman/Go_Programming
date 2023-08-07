@@ -1,12 +1,19 @@
 go 1.18
 
 use (
+	./Apps/appwithmysql
+	./Apps/basic-app
 	./Apps/bus-arrival
+	./Apps/googlecompute
 	./Apps/shopping-list
+	./Apps/urlShortener
 	./Web/analytics
 	./Web/basicGRPC
+	./Web/basicMemory
+	./Web/basicMemoryMap
 	./Web/basicMigrate
 	./Web/basicPrometheus
+	./Web/basicUsingDatastore
 	./Web/cooklang
 	./Web/customHPAScalingClient
 	./Web/customHPAScalingServer
