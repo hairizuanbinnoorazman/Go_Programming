@@ -1,0 +1,11 @@
+image:
+  repository: gcr.io/XXX/basic-migrate
+  tag: "v2"
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 500Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi

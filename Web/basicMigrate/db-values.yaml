@@ -1,0 +1,13 @@
+auth:
+  rootPassword: rootpassword
+  database: application
+  username: username
+  password: password
+primary:
+  resources:
+    limits:
+      cpu: '1'
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi

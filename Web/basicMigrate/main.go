@@ -46,14 +46,28 @@ var migrateCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
+		dbUser := os.Getenv("DATABASE_USER")
+		dbPass := os.Getenv("DATABASE_PASSWORD")
+		dbHost := os.Getenv("DATABASE_HOST")
+		dbName := os.Getenv("DATABASE_NAME")
+
 		m, err := migrate.NewWithSourceInstance(
-			"iofs", d, "mysql://user:password@(localhost:3306)/application")
+			"iofs", d, fmt.Sprintf("mysql://%v:%v@(%v:3306)/%v", dbUser, dbPass, dbHost, dbName))
 
 		if err != nil {
 			panic(fmt.Sprintf("unable to connect to database :: %v", err))
 		}
 		m.Up()
 	},
+}
+
+type Status struct{}
+
+func (h Status) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	log.Println("start status endpoint")
+	defer log.Println("end status endpoint")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("ok"))
 }
 
 type UserGet struct {
@@ -121,13 +135,18 @@ var serverCmd = &cobra.Command{
 	Short: "Run server",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("server start")
-		dsn := "user:password@tcp(127.0.0.1:3306)/application"
+		dbUser := os.Getenv("DATABASE_USER")
+		dbPass := os.Getenv("DATABASE_PASSWORD")
+		dbHost := os.Getenv("DATABASE_HOST")
+		dbName := os.Getenv("DATABASE_NAME")
+		dsn := fmt.Sprintf("%v:%v@tcp(%v:3306)/%v", dbUser, dbPass, dbHost, dbName)
 		db, err := gorm.Open(gormMySQL.Open(dsn), &gorm.Config{})
 		if err != nil {
 			panic(fmt.Sprintf("unable to connect to database :: %v", err))
 		}
 
 		r := mux.NewRouter()
+		r.Handle("/healthz", Status{}).Methods("GET")
 		r.Handle("/user", UserCreate{DB: db}).Methods("POST")
 		r.Handle("/user/{userID}", UserGet{DB: db}).Methods("GET")
 

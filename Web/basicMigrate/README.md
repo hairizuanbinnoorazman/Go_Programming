@@ -41,3 +41,17 @@ Run the curl command
 curl -X POST localhost:8888/user -d '{"first_name": "test", "last_name":"test"}'
 curl -X GET localhost:8888/user/1
 ```
+
+## Using Helm Charts
+
+Install database
+
+```bash
+helm install -f db-values.yaml mariadb oci://registry-1.docker.io/bitnamicharts/mariadb
+```
+
+Install application
+
+```bash
+helm install -f app-values.yaml basic ./basicMigrate
+```
