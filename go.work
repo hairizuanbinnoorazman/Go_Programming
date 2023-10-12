@@ -1,4 +1,6 @@
-go 1.18
+go 1.20
+
+toolchain go1.21.2
 
 use (
 	./Apps/appwithmysql
@@ -8,20 +10,19 @@ use (
 	./Apps/shopping-list
 	./Apps/urlShortener
 	./Web/analytics
+	./Web/basic
+	./Web/basicFileNotify
 	./Web/basicGRPC
+	./Web/basicGenerics
 	./Web/basicMemory
 	./Web/basicMemoryMap
 	./Web/basicMigrate
+	./Web/basicOpa
 	./Web/basicPrometheus
 	./Web/basicUsingDatastore
 	./Web/cooklang
-	./Web/customHPAScalingClient
 	./Web/customHPAScalingServer
 	./Web/fullObservability
 	./Web/leaderElectionWithK8s
 	./Web/sendEmail
-	./web/basic
-	./web/basicFileNotify
-	./web/basicGenerics
-	./web/basicOpa
 )
