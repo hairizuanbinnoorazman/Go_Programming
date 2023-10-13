@@ -15,12 +15,8 @@ func (q *Queue) Enqueue(item int) {
 }
 
 func (q *Queue) Dequeue() (int, error) {
-	if len(q.queue) <= 0 {
-		return 0, fmt.Errorf("Queue is empty")
-	} else if len(q.queue) == 1 {
-		item := q.queue[0]
-		q.queue = []int{}
-		return item, nil
+	if len(q.queue) == 0 {
+		return 0, fmt.Errorf("no more items in the queue")
 	}
 	item := q.queue[0]
 	q.queue = q.queue[1:]
