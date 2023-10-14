@@ -6,27 +6,29 @@ Description in English:
 2. After first card, see second card.
 3. On second card, swap if first card is bigger
 4. If it was a smaller number, keep swapping left
- */
+*/
 
 package main
 
 import "fmt"
 
 func insertion_sort(arr []int) []int {
-	var idx int
-	for idx, _ = range arr {
-		iter := idx
-		for iter > 0 {
-			if arr[iter] < arr[iter-1] {
-				temp := arr[iter]
-
-				arr[iter] = arr[iter-1]
-				arr[iter-1] = temp
+	if len(arr) <= 1 {
+		return arr
+	}
+	for i := 1; i < len(arr); i++ {
+		reversingIdx := i
+		for arr[reversingIdx] < arr[reversingIdx-1] {
+			tempVal := arr[reversingIdx-1]
+			arr[reversingIdx-1] = arr[reversingIdx]
+			arr[reversingIdx] = tempVal
+			reversingIdx = reversingIdx - 1
+			if reversingIdx == 0 {
+				break
 			}
-			iter = iter - 1
-			fmt.Println(iter)
 		}
 	}
+
 	return arr
 }
 
