@@ -6,6 +6,9 @@ Description in English:
 2. After first card, see second card.
 3. On second card, swap if first card is bigger
 4. If it was a smaller number, keep swapping left
+
+Refer to the following page for details:
+https://www.geeksforgeeks.org/insertion-sort/
 */
 
 package main
