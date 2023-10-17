@@ -61,6 +61,7 @@ func (m *MemoryMapStore) runner() {
 		}
 	}
 }
+
 func (m *MemoryMapStore) Store(key, value string) {
 	m.addChan <- storeItem{key, value}
 }
