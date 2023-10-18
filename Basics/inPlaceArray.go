@@ -42,3 +42,23 @@ func moveVal(a []int, val int) {
 		}
 	}
 }
+
+func moveLeft(aa []int, idx int) {
+	counter := idx
+	for i := len(aa) - 1 - idx; i > 0; i-- {
+		aa[counter] = aa[counter+1]
+		counter += 1
+	}
+}
+
+func moveRight(aa []int, idx int) {
+	previousVal := 0
+	nextVal := aa[idx]
+	for i := idx; i < len(aa); i++ {
+		aa[i] = previousVal
+		previousVal = nextVal
+		if i+1 < len(aa) {
+			nextVal = aa[i+1]
+		}
+	}
+}
