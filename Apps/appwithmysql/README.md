@@ -20,7 +20,7 @@ First, install mariadb - reason for using mariadb install of mysql is due to dif
 
 ```bash
 sudo apt update
-sudo apt install -y maria-server maria-client
+sudo apt install -y mariadb-server mariadb-client
 ```
 
 Then enter into mysql command line
@@ -32,12 +32,25 @@ mysql
 Then create the database and create user
 
 ```
-CREATE DATABASE testmysql
-CREATE USER username IDENTIFIED BY 'password'
+CREATE DATABASE testmysql;
+CREATE USER username IDENTIFIED BY 'password';
+GRANT ALL PRIVILEGES ON `testmysql`.* TO 'username';
+```
+
+Build the binary
+
+```bash
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o recordmaker .
 ```
 
 Copy the binary over
 
 ```bash
-sftp recordmaker hairizuan@<ip address>:/root/recordmaker
+scp recordmaker hairizuan@<ip address>:/home/hairizuan/recordmaker
+```
+
+Mysql command to check records on database:
+
+```
+select * from `testmysql`.`users` order by `updated_at` desc limit 10 ;
 ```
