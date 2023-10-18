@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"sync"
 	"time"
@@ -19,6 +20,12 @@ type User struct {
 }
 
 func main() {
+	var threadCount int
+	var dataPoints int
+	flag.IntVar(&threadCount, "threads", 150, "Count of goroutine started to push data into database")
+	flag.IntVar(&dataPoints, "points", 1000, "Number of data points to be pushed from a single goroutine")
+	flag.Parse()
+
 	fmt.Println("Start application")
 	db, err := gorm.Open("mysql", "username:password@tcp(localhost:3306)/testmysql?charset=utf8&parseTime=True")
 	db.DB().SetMaxOpenConns(100)
@@ -35,9 +42,9 @@ func main() {
 
 	var wg sync.WaitGroup
 
-	for i := 1; i <= 150; i++ {
+	for i := 1; i <= threadCount; i++ {
 		wg.Add(1)
-		go insertRecords(db, &wg)
+		go insertRecords(db, &wg, dataPoints)
 	}
 
 	wg.Wait()
@@ -45,7 +52,7 @@ func main() {
 	defer db.Close()
 }
 
-func insertRecords(db *gorm.DB, wg *sync.WaitGroup) {
+func insertRecords(db *gorm.DB, wg *sync.WaitGroup, items int) {
 	defer wg.Done()
 	for i := 0; i < 1000; i++ {
 		fmt.Printf("Iteration: %v\n", i)
