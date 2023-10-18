@@ -20,29 +20,28 @@ func main() {
 // Left handside = 2s + 1
 // Right handside = 2s + 2
 // Parent = (s-1)/2
-func ArrHeapify(nums []int, s int) {
-	leftSideIdx := 2*s + 1
-	rightSideIdx := 2*s + 2
+func ArrHeapify(nums []int, node int) {
+	lhsIdx := 2*node + 1
+	rhsIdx := 2*node + 2
 
-	if leftSideIdx >= len(nums) {
-		return
+	if lhsIdx < len(nums) {
+		ArrHeapify(nums, lhsIdx)
+		if nums[node] < nums[lhsIdx] {
+			tempVal := nums[node]
+			nums[node] = nums[lhsIdx]
+			nums[lhsIdx] = tempVal
+		}
 	}
-	ArrHeapify(nums, leftSideIdx)
-	if rightSideIdx >= len(nums) {
-		return
-	}
-	ArrHeapify(nums, rightSideIdx)
 
-	if nums[s] < nums[leftSideIdx] {
-		temp := nums[s]
-		nums[s] = nums[leftSideIdx]
-		nums[leftSideIdx] = temp
+	if rhsIdx < len(nums) {
+		ArrHeapify(nums, rhsIdx)
+		if nums[node] < nums[rhsIdx] {
+			tempVal := nums[node]
+			nums[node] = nums[rhsIdx]
+			nums[rhsIdx] = tempVal
+		}
 	}
-	if nums[s] < nums[rightSideIdx] {
-		temp := nums[s]
-		nums[s] = nums[rightSideIdx]
-		nums[rightSideIdx] = temp
-	}
+
 }
 
 // Node implementation
