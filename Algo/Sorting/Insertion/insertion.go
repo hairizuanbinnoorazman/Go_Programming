@@ -15,28 +15,22 @@ package main
 
 import "fmt"
 
-func insertion_sort(arr []int) []int {
-	if len(arr) <= 1 {
-		return arr
-	}
-	for i := 1; i < len(arr); i++ {
-		reversingIdx := i
-		for arr[reversingIdx] < arr[reversingIdx-1] {
-			tempVal := arr[reversingIdx-1]
-			arr[reversingIdx-1] = arr[reversingIdx]
-			arr[reversingIdx] = tempVal
-			reversingIdx = reversingIdx - 1
-			if reversingIdx == 0 {
+func insertion_sort(arr []int) {
+	for k := 1; k < len(arr); k++ {
+		for m := k; m > 0; m-- {
+			if arr[m] < arr[m-1] {
+				tempVal := arr[m-1]
+				arr[m-1] = arr[m]
+				arr[m] = tempVal
+			} else {
 				break
 			}
 		}
 	}
-
-	return arr
 }
 
 func main() {
 	values := []int{2, 3, 6, 1, 0, -1, 8, -5}
-	miao := insertion_sort(values)
-	fmt.Println(miao)
+	insertion_sort(values)
+	fmt.Println(values)
 }
