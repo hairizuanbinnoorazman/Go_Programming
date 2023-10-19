@@ -18,6 +18,7 @@ use (
 	./Web/basicMigrate
 	./Web/basicOpa
 	./Web/basicPrometheus
+	./Web/basicRedis
 	./Web/basicUsingDatastore
 	./Web/cooklang
 	./Web/customHPAScalingServer
