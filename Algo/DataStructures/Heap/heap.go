@@ -16,6 +16,29 @@ func main() {
 		ArrHeapify(a, i)
 	}
 	fmt.Println(a)
+
+	zz := []int{8, 6, 5}
+	for i := 3; i > 0; i-- {
+		zz = append(zz, i)
+		ArrHeapUp(zz, len(zz)-1)
+		fmt.Println(zz)
+	}
+	for i := 7; i < 11; i++ {
+		zz = append(zz, i)
+		ArrHeapUp(zz, len(zz)-1)
+		fmt.Println(zz)
+	}
+}
+
+func ArrHeapUp(nums []int, node int) {
+	parentNode := (node - 1) / 2
+
+	if nums[node] > nums[parentNode] {
+		tempVal := nums[parentNode]
+		nums[parentNode] = nums[node]
+		nums[node] = tempVal
+		ArrHeapUp(nums, parentNode)
+	}
 }
 
 // Slice implementation
