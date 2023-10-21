@@ -10,6 +10,12 @@ func main() {
 		ArrHeapify(a, i)
 	}
 	fmt.Println(a)
+
+	a = append(a, 90)
+	for i := (len(a) - 1) / 2; i >= 0; i-- {
+		ArrHeapify(a, i)
+	}
+	fmt.Println(a)
 }
 
 // Slice implementation
