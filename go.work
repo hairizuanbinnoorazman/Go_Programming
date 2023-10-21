@@ -23,6 +23,7 @@ use (
 	./Web/cooklang
 	./Web/customHPAScalingServer
 	./Web/fullObservability
+	./Web/headlessService
 	./Web/leaderElectionWithK8s
 	./Web/sendEmail
 )
