@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: firer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app:  firer
+      component: firer
+  template:
+    metadata:
+      labels:
+        app: firer
+        component: firer
+    spec:
+      containers:
+      - name: headless-service-app
+        image: headless-service-app:v1
+        env:
+          - name: MODE
+            value: "firer"
+          - name: SERVER_HOST
+            value: "headless-server.default.svc"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: server
+    component: server
+  name: headless-server
+spec:
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: server
+    component: server
+  type: ClusterIP
+  clusterIP: None
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app:  server
+      component: server
+  template:
+    metadata:
+      labels:
+        app: server
+        component: server
+    spec:
+      containers:
+      - name: headless-service-app
+        image: headless-service-app:v1
+        env:
+          - name: MODE
+            value: "server"
