@@ -3,15 +3,12 @@ package main
 import "fmt"
 
 func main() {
-	a := []int{2, 3, 1, 0, 4, 5, 7}
+	a := []int{1, 3, 5, 3, 6, 13, 10, 9, 8, 15, 17}
 	fmt.Println(a)
-	ArrHeapify(a, 0)
-	fmt.Println(a)
-	a[0] = 0
-	ArrHeapify(a, 0)
-	fmt.Println(a)
-	a[0] = 0
-	ArrHeapify(a, 0)
+
+	for i := (len(a) - 1) / 2; i >= 0; i-- {
+		ArrHeapify(a, i)
+	}
 	fmt.Println(a)
 }
 
@@ -23,25 +20,26 @@ func main() {
 func ArrHeapify(nums []int, node int) {
 	lhsIdx := 2*node + 1
 	rhsIdx := 2*node + 2
+	largestIdx := node
 
 	if lhsIdx < len(nums) {
-		ArrHeapify(nums, lhsIdx)
-		if nums[node] < nums[lhsIdx] {
-			tempVal := nums[node]
-			nums[node] = nums[lhsIdx]
-			nums[lhsIdx] = tempVal
+		if nums[lhsIdx] > nums[largestIdx] {
+			largestIdx = lhsIdx
 		}
 	}
 
 	if rhsIdx < len(nums) {
-		ArrHeapify(nums, rhsIdx)
-		if nums[node] < nums[rhsIdx] {
-			tempVal := nums[node]
-			nums[node] = nums[rhsIdx]
-			nums[rhsIdx] = tempVal
+		if nums[rhsIdx] > nums[largestIdx] {
+			largestIdx = rhsIdx
 		}
 	}
 
+	if largestIdx != node {
+		tempVal := nums[node]
+		nums[node] = nums[largestIdx]
+		nums[largestIdx] = tempVal
+		ArrHeapify(nums, largestIdx)
+	}
 }
 
 // Node implementation
