@@ -3,7 +3,7 @@ WORKDIR /headlessservice
 COPY go.mod .
 RUN go mod download
 COPY . .
-RUN go build -o app .
+RUN CGO_ENABLED=0 go build -o app .
 
 FROM debian:bullseye-slim as prod
 RUN apt update && apt install -y ca-certificates
