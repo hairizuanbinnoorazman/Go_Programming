@@ -24,7 +24,7 @@ func firer() {
 		for _, ip := range ips {
 			fmt.Printf("%v ips found. Will contact ip: %v", len(ips), ip.String())
 			time.Sleep(2 * time.Second)
-			resp, err := http.Get(fmt.Sprintf("%v:8080", ip.String()))
+			resp, err := http.Get(fmt.Sprintf("http://%v:8080", ip.String()))
 			if err != nil {
 				fmt.Printf("unexpected error when contacting: %v\n", err)
 			}
