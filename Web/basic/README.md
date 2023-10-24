@@ -120,6 +120,10 @@ TODO
 
 ## Deploy via Terraform
 
+Some drawbacks (comparing it to other tools like Ansible).  
+- Unable to simply pass variables from tfvars down to modules easily. Design conflict with initial aim of terraform. Compare the experience of this compared to Ansible  
+  https://github.com/hashicorp/terraform/issues/32508
+
 ### Docker
 
 NOTE: Seems hard to also include build step in terraform (need to replicate the dockerfile into terraform itself - it seems to have issues with relative paths? Might require a bit of debugging)
