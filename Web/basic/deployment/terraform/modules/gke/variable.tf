@@ -1,6 +1,7 @@
 variable "gcp_project_id" {
     description = "Define the GCP Project ID that we will interacting with"
     type        = string
+    sensitive   = true
 }
 
 variable "gcp_region" {

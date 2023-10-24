@@ -13,4 +13,5 @@ variable image_tag {
 variable "gcp_project_id" {
     description = "Google Cloud Platform Project ID"
     type        = string
+    sensitive   = true
 }
