@@ -9,6 +9,9 @@ Here is the full list of environment supported for this:
   - [Docker](#docker)
   - [Google Compute Engine](#google-compute-engine)
   - [Google Kubernetes Engine](#google-kubernetes-engine)
+  - [Google Cloud Functions](#google-cloud-functions)
+  - [Google Cloud Run](#google-cloud-run)
+  - [Google App Engine](#google-app-engine)
 
 
 ## Golang App on local workstation
@@ -79,3 +82,15 @@ Next, we would run the following command to create the deployment service
 ```bash
 kubectl create deployment basic-app --image=gcr.io/<project id>/basic:v1
 ```
+
+## Google Cloud Functions
+
+TODO
+
+## Google Cloud Run
+
+TODO
+
+## Google App Engine
+
+TODO
