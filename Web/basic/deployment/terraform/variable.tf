@@ -9,3 +9,8 @@ variable image_tag {
     type        = string
     default     = "v1"
 }
+
+variable "gcp_project_id" {
+    description = "Google Cloud Platform Project ID"
+    type        = string
+}
