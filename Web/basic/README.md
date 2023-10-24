@@ -92,7 +92,20 @@ TODO
 
 ## Google Cloud Run
 
-TODO
+First build the container with the tag that allows us to push it into container registry/artifact registry.
+
+For container registry:
+
+```bash
+docker build -t gcr.io/<project id>/basic-app:v1 -f ./deployments/docker/slim.Dockerfile .
+docker push gcr.io/<project id>/basic-app:v1
+```
+
+Run gcloud command to create Cloud Run service
+
+```bash
+gcloud run deploy basic-app --image=gcr.io/<project id>/basic-app:v1 --concurrency=10 --max-instances=1 --platform=managed --allow-unauthenticated --ingress=all --cpu=1 --memory=500Mi --region=us-east1
+```
 
 ## Google App Engine
 
