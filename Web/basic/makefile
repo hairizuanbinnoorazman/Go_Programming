@@ -13,10 +13,13 @@ gcp_docker_build:
 	docker build -t gcr.io/${gcp_project}/basic-app:${version} -f ./deployment/docker/slim.Dockerfile .
 
 gcp_docker_push:
-	docker build -t gcr.io/${gcp_project}/basic-app:${version} -f ./deployment/docker/slim.Dockerfile .
+	docker push gcr.io/${gcp_project}/basic-app:${version}
 
 gcp_instance:
 	gcloud compute instances create instance-1 --project=$(gcp_project) --zone=us-central1-a --machine-type=e2-medium
 
 gke_cluster:
 	gcloud container clusters create-auto "autopilot-cluster-1" --region "us-central1"
+
+create_deployment:
+	kubectl create deployment basic-app --image=gcr.io/$(gcp_project)/basic-app:v1
