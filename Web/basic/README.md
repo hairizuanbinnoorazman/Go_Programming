@@ -75,6 +75,9 @@ Then, we would need to run the following command to create a Auto-GKE cluster
 
 ```bash
 gcloud container clusters create-auto "autopilot-cluster-1" --region "us-central1"
+
+# Get access to GKE cluster
+gcloud container clusters get-credentials autopilot-cluster-1 --zone us-central1-a
 ```
 
 Next, we would run the following command to create the deployment service
