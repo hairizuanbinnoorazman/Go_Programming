@@ -127,6 +127,7 @@ Some drawbacks (comparing it to other tools like Ansible).
 Useful references
 - terraform registry: https://registry.terraform.io/
 - https://spacelift.io/blog/how-to-use-terraform-variables
+- https://robertdebock.nl/learn-terraform/
 
 ### Docker
 
