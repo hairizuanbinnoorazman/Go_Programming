@@ -8,6 +8,7 @@ Here is the full list of environment supported for this:
   - [Golang App on local workstation](#golang-app-on-local-workstation)
   - [Docker](#docker)
   - [Google Compute Engine](#google-compute-engine)
+  - [Google Kubernetes Engine](#google-kubernetes-engine)
 
 
 ## Golang App on local workstation
@@ -41,6 +42,12 @@ First build the linux binary for the application
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o app .
 ```
 
+Then, we would need to create the Google Compute Engine instance
+
+```bash
+gcloud compute instances create instance-1 --project=<project id> --zone=us-central1-a --machine-type=e2-medium
+```
+
 Then, scp the binary into the server
 
 ```bash
@@ -48,4 +55,27 @@ scp app hairizuan@<ip hostname>:/usr/local/bin/app
 ssh hairizuan@<ip hostname>
 chmod +x /usr/local/bin/app
 app
+```
+
+## Google Kubernetes Engine
+
+First build the container with the tag that allows us to push it into container registry/artifact registry.
+
+For container registry:
+
+```bash
+docker build -t gcr.io/<project id>/basic:v1 -f ./deployments/docker/slim.Dockerfile .
+docker push gcr.io/<project id>/basic:v1
+```
+
+Then, we would need to run the following command to create a Auto-GKE cluster
+
+```bash
+gcloud container clusters create-auto "autopilot-cluster-1" --region "us-central1"
+```
+
+Next, we would run the following command to create the deployment service
+
+```bash
+kubectl create deployment basic-app --image=gcr.io/<project id>/basic:v1
 ```
