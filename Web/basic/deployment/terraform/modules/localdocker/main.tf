@@ -7,17 +7,17 @@ terraform {
   }
 }
 
-resource "docker_image" "nginx" {
-  name         = "nginx"
+resource "docker_image" "basic_app" {
+  name         = "basic-app:v1"
   keep_locally = false
 }
 
-resource "docker_container" "nginx" {
-  image = docker_image.nginx.image_id
-  name  = "tutorial"
+resource "docker_container" "basic_app" {
+  image = docker_image.basic_app.image_id
+  name  = "basic-app"
 
   ports {
-    internal = 80
-    external = 8000
+    internal = 8080
+    external = 8080
   }
 }
