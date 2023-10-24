@@ -135,14 +135,14 @@ NOTE: Seems hard to also include build step in terraform (need to replicate the 
 From terraform folder, run the following command
 
 ```bash
-terraform plan -target=module.localdocker -out localdocker.plan
+terraform plan -target=module.localdocker -var-file=local.tfvars -out localdocker.plan
 terraform apply localdocker.plan
 ```
 
 To destroy it
 
 ```bash
-terraform plan -target=module.localdocker -destroy -out localdocker.plan
+terraform plan -target=module.localdocker -var-file=local.tfvars -destroy -out localdocker.plan
 terraform apply localdocker.plan
 ```
 
@@ -153,3 +153,25 @@ Require step to build Google Cloud Image (which we would then use to deploy the 
 ### Google Kubernetes Engine
 
 It is assumed that the images have already been pushed into a container registry - all we have to do is to deploy it into a cluster.
+
+```bash
+TF_VAR_gcp_project_id=<project id> terraform plan -target=module.gke -var-file=local.tfvars -out gke.plan
+terraform apply gke.plan
+```
+
+To destroy it 
+
+```bash
+TF_VAR_gcp_project_id=<project id> terraform plan -target=module.gke -var-file=local.tfvars -destroy -out gke.plan
+terraform apply gke.plan
+```
+
+Convienience make commands available to create the plans via:
+
+```bash
+# Create plan for creating the infra
+make tf_create_gke
+
+# Create plan for destroying the infra
+make tf-destroy_gke
+```

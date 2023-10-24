@@ -23,3 +23,9 @@ gke_cluster:
 
 create_deployment:
 	kubectl create deployment basic-app --image=gcr.io/$(gcp_project)/basic-app:v1
+
+tf_create_gke:
+	TF_VAR_gcp_project_id=$(gcp_project) terraform plan -target=module.gke -var-file=local.tfvars -out gke.plan
+
+tf_destroy_gke:
+	TF_VAR_gcp_project_id=$(gcp_project) terraform plan -target=module.gke -destroy -var-file=local.tfvars -out gke.plan
