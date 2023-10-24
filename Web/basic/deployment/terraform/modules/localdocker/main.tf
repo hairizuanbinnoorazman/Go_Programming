@@ -8,7 +8,7 @@ terraform {
 }
 
 resource "docker_image" "basic_app" {
-  name         = "basic-app:v1"
+  name         = "${var.image_name}:${var.image_tag}"
   keep_locally = false
 }
 
