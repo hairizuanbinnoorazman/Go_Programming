@@ -1,7 +1,7 @@
 FROM golang:1.18 as builder
 WORKDIR /helloworld
 ADD . .
-RUN go build -o app .
+RUN CGO_ENABLED=0 go build -o app .
 
 FROM alpine:3.16
 RUN apk add gcompat
