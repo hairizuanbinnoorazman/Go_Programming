@@ -124,8 +124,9 @@ Some drawbacks (comparing it to other tools like Ansible).
 - Unable to simply pass variables from tfvars down to modules easily. Design conflict with initial aim of terraform. Compare the experience of this compared to Ansible  
   https://github.com/hashicorp/terraform/issues/32508
 
-Useful references
+Useful references/notes
 - Name of module defined in root `main.tf` is used in the `-target` flag. If not matched, it will not trigger
+- If `deletion_proection` is true. First, make the change, create plan and apply it. After which, attempt to destroy after. (Alternatively, can change tfstate file - but that's not recommended)
 - terraform registry: https://registry.terraform.io/
 - https://spacelift.io/blog/how-to-use-terraform-variables
 - https://robertdebock.nl/learn-terraform/
