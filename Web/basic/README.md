@@ -121,7 +121,7 @@ TODO
 
 ### Amazon EC2 Instance
 
-If we are to utilize the console to create the instance - to manualy ssh in, we need to utilize the `ec2-user` user in the instance.
+If we are to utilize the console to create the instance - to manualy ssh in, we need to utilize the `ec2-user` user in the instance. Depends on what is being OS being used: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/managing-users.html
 
 - Need to define default VPC and Security Group if it doesn't exist
 
