@@ -19,8 +19,9 @@ provider "google" {
 }
 
 resource "google_container_cluster" "test_cluster" {
-    name             = "${var.cluster_name}"
-    enable_autopilot = true
+    name                = "${var.cluster_name}"
+    enable_autopilot    = true
+    deletion_protection = false
 }
 
 # https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/using_gke_with_terraform
