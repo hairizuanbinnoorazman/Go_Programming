@@ -125,6 +125,7 @@ Some drawbacks (comparing it to other tools like Ansible).
   https://github.com/hashicorp/terraform/issues/32508
 
 Useful references
+- Name of module defined in root `main.tf` is used in the `-target` flag. If not matched, it will not trigger
 - terraform registry: https://registry.terraform.io/
 - https://spacelift.io/blog/how-to-use-terraform-variables
 - https://robertdebock.nl/learn-terraform/
