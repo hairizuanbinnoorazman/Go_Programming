@@ -28,6 +28,10 @@ data "google_client_config" "provider" {}
 
 data "google_container_cluster" "test_cluster" {
     name     = "${var.cluster_name}"
+    depends_on = [ 
+        google_container_cluster.test_cluster
+    ]
+
 }
 
 provider "kubernetes" {
@@ -41,9 +45,17 @@ provider "kubernetes" {
 resource "kubernetes_deployment_v1" "basic_app_deployment" {
     metadata {
         name = "basic-app" 
+        labels = {
+            app = "basic-app"
+        }
     }
     spec {
         replicas = 2
+        selector {
+            match_labels = {
+                app = "basic-app"
+            }   
+        }
         template {
             metadata {
                 labels = {
