@@ -166,7 +166,15 @@ terraform apply localdocker.plan
 
 ### Google Compute Engine
 
-Require step to build Google Cloud Image (which we would then use to deploy the VM). This is done by relying on packer.
+Require step to build Google Cloud Image (which we would then use to deploy the VM). This is done by relying on packer. Packer provides the tooling that we would need to first create the image that we wish to rely on and then - we can create instances out of it.
+
+```bash
+# Just to test that packer script works
+packer validate -var 'gcp_project_id=aaa'  gce.pkr.hcl
+
+# Building it
+packer build -var 'gcp_project_id=XXX' gce.pkr.hcl
+```
 
 ### Google Kubernetes Engine
 
