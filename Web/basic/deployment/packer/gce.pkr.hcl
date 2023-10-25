@@ -48,10 +48,20 @@ build {
         source      = "../bin/app"
         destination = "/home/hairizuan/app"
     }
+
+    provisioner "file" {
+        source      = "../bin/app.service"
+        destination = "/home/hairizuan/app.service"
+    }
     
     provisioner "shell" {
         inline = [
-            "sudo mv /home/hairizuan/app /usr/local/bin/app"
+            "sudo groupadd app",
+            "sudo useradd -m -g app app",
+            "sudo mv /home/hairizuan/app /usr/local/bin/app",
+            "sudo mv /home/hairizuan/app.service /etc/systemd/system/app.service",
+            "sudo systemctl daemon-reload",
+            "sudo systemctl enable app.service"
         ]
     }
 }
