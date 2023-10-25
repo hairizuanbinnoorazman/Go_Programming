@@ -13,6 +13,7 @@ Here is the full list of environment supported for this:
     - [Google Cloud Functions](#google-cloud-functions)
     - [Google Cloud Run](#google-cloud-run)
     - [Google App Engine](#google-app-engine)
+    - [Amazon EC2 Instance](#amazon-ec2-instance)
   - [Deploy via Terraform](#deploy-via-terraform)
     - [Docker](#docker-1)
     - [Google Compute Engine](#google-compute-engine-1)
@@ -117,6 +118,20 @@ gcloud run deploy basic-app --image=gcr.io/<project id>/basic-app:v1 --concurren
 ### Google App Engine
 
 TODO
+
+### Amazon EC2 Instance
+
+If we are to utilize the console to create the instance - to manualy ssh in, we need to utilize the `ec2-user` user in the instance.
+
+- Need to define default VPC and Security Group if it doesn't exist
+
+```bash
+# Get instance IDs
+aws ec2 describe-instances | yq '.Reservations.[].Instances.[].InstanceId'  -
+aws ec2 run-instances --image-id=ami-0dbc3d7bc646e8516 --count=1 --instance-type=t2.micro --key-name="Hairizuan Laptop - Key 2"
+aws ec2 stop-instances --instance-ids <values>
+aws ec2 terminate-instances --instance-ids <values>
+```
 
 ## Deploy via Terraform
 
