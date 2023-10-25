@@ -1,6 +1,12 @@
 ## Programming with Go
 
-Code snippets with go code
+Code snippets with Golang code. There are multiple sections to this codebase:
+
+- [Algo](/hairizuanbinnoorazman/Go_Programming/tree/master/Algo) - contains code that does demos of how to do data structures and algorithms using Golang programming language
+- [Apps](/hairizuanbinnoorazman/Go_Programming/tree/master/Algo) - contains code that covers "bigger" Golang applications or Golang applications that I run on the side
+- [Basics](/hairizuanbinnoorazman/Go_Programming/tree/master/Basics) - Golang code that tests particular features in Golang (mostly written up long time back when I was unfamiliar with Golang applciation)
+- [Environment](/hairizuanbinnoorazman/Go_Programming/tree/master/Environment) - Scripts that cover setting up deployment targets (e.g. setting up open source logging, monitoring on a Kubernetes cluster)
+- [Web](/hairizuanbinnoorazman/Go_Programming/tree/master/Web) - contains code that are "smaller" apps that certain particular deployment/feature. Each folder in it would have a README.md that would cover why such folder exists.
 
 ## List of useful commands
 
