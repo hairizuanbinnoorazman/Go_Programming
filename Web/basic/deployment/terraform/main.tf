@@ -5,7 +5,7 @@ module "localdocker" {
     image_tag  = "${var.image_tag}"
 }
 
-module "gcp_kubernetes" {
+module "gke" {
     source = "./modules/gke"
 
     gcp_project_id = "${var.gcp_project_id}"
