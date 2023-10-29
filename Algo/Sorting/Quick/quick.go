@@ -2,6 +2,13 @@ package main
 
 import "fmt"
 
+/*
+Quick Sort
+- Use an item in array as "pivot" number
+- create lhs as less than pivot and rhs as more than pivot
+- Combine it into final array
+*/
+
 func quicksort(values []int) []int {
 	if len(values) <= 1 {
 		return values

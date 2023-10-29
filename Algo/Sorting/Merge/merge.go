@@ -2,6 +2,12 @@ package main
 
 import "fmt"
 
+/*
+Merge sort:
+- Split array into two until it cannot be split anymore
+- While combining it, put them back in the right order
+*/
+
 func MergeSort(items []int) []int {
 	if len(items) <= 1 {
 		return items
