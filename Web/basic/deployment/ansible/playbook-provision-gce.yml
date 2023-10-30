@@ -1,0 +1,46 @@
+- name: Create an instance
+  hosts: localhost
+  gather_facts: false
+  tasks:
+   - name: create a disk
+     gcp_compute_disk:
+         name: 'disk-instance'
+         size_gb: 50
+         source_image: 'projects/debian-cloud/global/images/debian-11-bullseye-v20231010'
+         zone: "{{ zone }}"
+         project: "{{ gcp_project }}"
+         auth_kind: "{{ gcp_cred_kind }}"
+         state: present
+     register: disk
+   - name: create a address
+     gcp_compute_address:
+         name: 'address-instance'
+         region: "{{ region }}"
+         project: "{{ gcp_project }}"
+         auth_kind: "{{ gcp_cred_kind }}"
+         state: present
+     register: address
+   - name: create a instance
+     gcp_compute_instance:
+         state: present
+         name: test-vm
+         machine_type: e2-medium
+         labels:
+           application: web-app
+         disks:
+           - auto_delete: true
+             boot: true
+             source: "{{ disk }}"
+         network_interfaces:
+             - network: null # use default
+               access_configs:
+                 - name: 'External NAT'
+                   nat_ip: "{{ address }}"
+                   type: 'ONE_TO_ONE_NAT'
+         zone: "{{ zone }}"
+         project: "{{ gcp_project }}"
+         auth_kind: "{{ gcp_cred_kind }}"
+     register: instance
+
+   - name: Wait for SSH to come up
+     wait_for: host={{ address.address }} port=22 delay=10 timeout=60

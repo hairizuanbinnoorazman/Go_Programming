@@ -1,0 +1,5 @@
+- name: Deploy application
+  hosts: web
+  tasks:
+   - name: Run ls command
+     command: ls
