@@ -121,6 +121,10 @@ TODO
 
 ### Amazon EC2 Instance
 
+We would first need to setup AWS CLI tool. We can do it in multiple ways
+- Set up a "super" user that has permissions to do everything. We can then embed the `access_keys` and `secret_keys`
+- Set a "empty" user that has `access_keys` and `secret_keys` but at the same time, we would create roles and allow our empty user to "assume" our role. This would allow us to drop access if ever there is a need for it.
+
 If we are to utilize the console to create the instance - to manualy ssh in, we need to utilize the `ec2-user` user in the instance. Depends on what is being OS being used: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/managing-users.html
 
 - Need to define default VPC and Security Group if it doesn't exist
