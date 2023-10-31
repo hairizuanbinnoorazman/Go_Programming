@@ -14,6 +14,7 @@ Here is the full list of environment supported for this:
     - [Google Cloud Run](#google-cloud-run)
     - [Google App Engine](#google-app-engine)
     - [Amazon EC2 Instance](#amazon-ec2-instance)
+    - [Amazon Elastic Container Service (ECS)](#amazon-elastic-container-service-ecs)
   - [Deploy via Terraform](#deploy-via-terraform)
     - [Docker](#docker-1)
     - [Google Compute Engine](#google-compute-engine-1)
@@ -137,7 +138,19 @@ aws ec2 stop-instances --instance-ids <values>
 aws ec2 terminate-instances --instance-ids <values>
 ```
 
+### Amazon Elastic Container Service (ECS)
+
+We would first need to push the container into Amazon ECR (Elastic Container Registry). To push image into the registry, we would first build the image, then we would need to set up credentials
+
+```bash
+aws ecr get-login-password --region <region> | docker login --username AWS --password-stdin <account-id>.dkr.ecr.<region>.amazonaws.com
+```
+
+ECR is quite different from Google's Container Registry - for each type of "application", we would need to create a new "repository" which we can then push the images in. E.g. in the case of the application here - we would first need to create a repository on ECR with the name `basic` - afterwhich, we can then push: `<aws specific registry url>/basic:v1`. We can't do this: `<aws specific registry url>/basic/basic:v1` - this would fail (docker command for pushing it would keep retrying till it eventually would fail)
+
+
 ## Deploy via Terraform
+
 
 Some drawbacks (comparing it to other tools like Ansible).  
 - Unable to simply pass variables from tfvars down to modules easily. Design conflict with initial aim of terraform. Compare the experience of this compared to Ansible  
