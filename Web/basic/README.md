@@ -143,11 +143,56 @@ aws ec2 terminate-instances --instance-ids <values>
 We would first need to push the container into Amazon ECR (Elastic Container Registry). To push image into the registry, we would first build the image, then we would need to set up credentials
 
 ```bash
+# For convenience purposes - to get account id
+aws sts get-caller-identity
+
+# Need to be called once in awhile since auth token got expired
 aws ecr get-login-password --region <region> | docker login --username AWS --password-stdin <account-id>.dkr.ecr.<region>.amazonaws.com
 ```
 
 ECR is quite different from Google's Container Registry - for each type of "application", we would need to create a new "repository" which we can then push the images in. E.g. in the case of the application here - we would first need to create a repository on ECR with the name `basic` - afterwhich, we can then push: `<aws specific registry url>/basic:v1`. We can't do this: `<aws specific registry url>/basic/basic:v1` - this would fail (docker command for pushing it would keep retrying till it eventually would fail)
 
+
+```bash
+aws ecr create-repository --repository-name=basic --region=<region>
+```
+
+We would then to build the docker image and then push it in.
+
+```bash
+docker build -t <account-id>.dkr.ecr.<region>.amazonaws.com/basic:v1 -f ./deployment/docker/slim.Dockerfile .
+docker push <account-id>.dkr.ecr.<region>.amazonaws.com/basic:v1
+```
+
+```bash
+aws ecs register-task-definition --family basic --requires-compatibilities FARGATE --container-definitions '[{"name":"web","image":"<account-id>.dkr.ecr.<region>.amazonaws.com/basic:v1","essential":true,"portMappings":[{"containerPort":8080}]}]' --memory 2048 --cpu 512 --network-mode awsvpc --execution-role-arn arn:aws:iam::<account-id>:role/ecsTaskExecutionRole
+
+aws ecs list-task-definitions
+
+aws ecs create-service --cluster default --service-name basic-test --task-definition arn:aws:ecs:<region-id>:<account-id>:task-definition/basic:1 --desired-count 2 --launch-type FARGATE --network-configuration 'awsvpcConfiguration={subnets=[<subnet-id>],securityGroups=[<security-group-id>],assignPublicIp=ENABLED}'
+
+aws ecs update-service --service basic-test --task-definition arn:aws:ecs:<region-id>:<account-id>:task-definition/basic:2 
+```
+
+For cleaning it up
+
+```bash
+aws ecs update-service --service basic-test --task-definition arn:aws:ecs:<region-id>:<account-id>:task-definition/basic:2 --desired-count=0
+
+# Apparently can't delete if it scaled more than 0
+aws ecs delete-service --cluster=default --service=basic-test
+
+# Check if tasks still running
+aws ecs list-services
+aws ecs list-tasks
+
+aws ecs deregister-task-definition --task-definition basic:1
+aws ecs deregister-task-definition --task-definition basic:2
+aws ecs delete-task-definitions --task-definitions='["basic:1","basic:2"]'
+
+# Apparently, there is delete protection on repositories (that's somewhat logical)
+aws ecr delete-repository --repository-name basic --region <region> --force
+```
 
 ## Deploy via Terraform
 
