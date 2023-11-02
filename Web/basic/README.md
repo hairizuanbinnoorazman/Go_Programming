@@ -164,6 +164,12 @@ docker build -t <account-id>.dkr.ecr.<region>.amazonaws.com/basic:v1 -f ./deploy
 docker push <account-id>.dkr.ecr.<region>.amazonaws.com/basic:v1
 ```
 
+Next steps would be the following:
+- Creating task definitions.
+- We're going for a "simple" deployment - so we'll opt for a ECS Service -> essentially, this wraps tasks (although some pages say that ECS Service -> ECS Taskset -> ECS Tasks). However, we don't need to interact with ECS Taskset - we simply rely on service to manage number of tasks to be run.
+- Create service call is "not idempotent" - need to run update-service instead of create service when trying to update it.
+- Don't forget to add container port - we would need this since the basic-golang app is only exposed on port 8080
+
 ```bash
 aws ecs register-task-definition --family basic --requires-compatibilities FARGATE --container-definitions '[{"name":"web","image":"<account-id>.dkr.ecr.<region>.amazonaws.com/basic:v1","essential":true,"portMappings":[{"containerPort":8080}]}]' --memory 2048 --cpu 512 --network-mode awsvpc --execution-role-arn arn:aws:iam::<account-id>:role/ecsTaskExecutionRole
 
