@@ -22,12 +22,14 @@ type User struct {
 func main() {
 	var threadCount int
 	var dataPoints int
+	var hostname string
 	flag.IntVar(&threadCount, "threads", 150, "Count of goroutine started to push data into database")
 	flag.IntVar(&dataPoints, "points", 1000, "Number of data points to be pushed from a single goroutine")
+	flag.StringVar(&hostname, "hostname", "localhost", "Hostname of database location")
 	flag.Parse()
 
 	fmt.Println("Start application")
-	db, err := gorm.Open("mysql", "username:password@tcp(localhost:3306)/testmysql?charset=utf8&parseTime=True")
+	db, err := gorm.Open("mysql", fmt.Sprintf("username:password@tcp(%v:3306)/testmysql?charset=utf8&parseTime=True", hostname))
 	db.DB().SetMaxOpenConns(100)
 	if err != nil {
 		panic(fmt.Sprintf("Unable to connect to database %v", err))
