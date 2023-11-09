@@ -49,14 +49,31 @@ func main() {
 		go insertRecords(db, &wg, dataPoints)
 	}
 
+	for j := 1; j <= 10; j++ {
+		go selectAll(db)
+	}
+
 	wg.Wait()
 
 	defer db.Close()
 }
 
+func selectAll(db *gorm.DB) {
+
+	for {
+		var a []User
+		result := db.Find(&a)
+		if result.Error != nil {
+			fmt.Printf("Error - unable to select db. %v", result.Error)
+		}
+		fmt.Printf("Number of records pulled: %v", len(a))
+	}
+
+}
+
 func insertRecords(db *gorm.DB, wg *sync.WaitGroup, items int) {
 	defer wg.Done()
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < items; i++ {
 		fmt.Printf("Iteration: %v\n", i)
 		u := User{
 			FirstName:  fmt.Sprintf("FName %v", i),
