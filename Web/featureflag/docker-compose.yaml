@@ -1,0 +1,20 @@
+version: '3.3'
+
+services:
+  unleash:
+    image: unleashorg/unleash-server
+    ports:
+      - 4242:4242
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_NAME: unleash
+      DATABASE_USERNAME: unleash_user
+      DATABASE_PASSWORD: some_password
+      DATABASE_SSL: false
+    restart: always
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: some_password
+      POSTGRES_USER: unleash_user
+      POSTGRES_DB: unleash
