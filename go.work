@@ -1,4 +1,4 @@
-go 1.21.3
+go 1.21.4
 
 use (
 	./Apps/appwithmysql
@@ -26,4 +26,5 @@ use (
 	./Web/headlessService
 	./Web/leaderElectionWithK8s
 	./Web/sendEmail
+	./Web/featureflag
 )
