@@ -18,7 +18,10 @@ var (
 
 func main() {
 	log.Println("begin server")
-	exampleTitle := os.Getenv("TITLE")
+	exampleTitle, exists := os.LookupEnv("TITLE")
+	if !exists {
+		log.Fatal("title is not set")
+	}
 
 	http.Handle("/", &index{Title: exampleTitle})
 	s := &http.Server{

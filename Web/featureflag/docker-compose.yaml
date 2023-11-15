@@ -11,6 +11,7 @@ services:
       DATABASE_USERNAME: unleash_user
       DATABASE_PASSWORD: some_password
       DATABASE_SSL: false
+      LOG_LEVEL: info
     restart: always
   postgres:
     image: postgres
