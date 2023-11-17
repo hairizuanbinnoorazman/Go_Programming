@@ -1,0 +1,15 @@
+[Unit]
+Description=Golang Application
+Requires=network-online.target
+After=network-online.target
+
+[Service]
+Environment="API_KEY=random"
+User=app
+Group=app
+Restart=on-failure
+ExecStart=/usr/local/bin/app
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=multi-user.target
