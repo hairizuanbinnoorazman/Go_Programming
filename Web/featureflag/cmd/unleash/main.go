@@ -113,7 +113,7 @@ func (i *index) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Printf("error occured - but code can continue fine: %v\n", err)
 	}
 
-	t, err := template.New("(webpage").Parse(tpl)
+	t, err := template.New("webpage").Parse(tpl)
 	if err != nil {
 		log.Printf("error occured when parsing: %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
