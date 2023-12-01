@@ -23,7 +23,7 @@ spec:
         - name: GCP_PROJECT_ID
           value: XXX
         - name: REGION
-          value: us-central1-a
+          value: asia-southeast1-a
         - name: SERVICE_ACCOUNT_FILE
           value: /var/googlecompute/credfile
         resources:
