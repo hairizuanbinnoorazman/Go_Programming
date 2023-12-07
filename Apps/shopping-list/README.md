@@ -11,3 +11,5 @@ We need to generate a couple of keys for "security" purposes. Generate hashkey a
 ```
 echo $RANDOM | md5sum
 ```
+
+Testing CI 1
