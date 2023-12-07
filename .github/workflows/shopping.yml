@@ -1,0 +1,17 @@
+name: Build and deploy shopping cart
+
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - "Apps/shopping-list/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+
