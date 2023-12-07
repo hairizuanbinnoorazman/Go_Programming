@@ -3,7 +3,7 @@ name: Build and deploy shopping cart
 on:
   push:
     branches:
-      - "main"
+      - "master"
     paths:
       - "Apps/shopping-list/**"
 
