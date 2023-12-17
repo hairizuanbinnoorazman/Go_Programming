@@ -26,3 +26,12 @@ jobs:
         workload_identity_provider: "projects/${{ secrets.GCP_PROJECT }}/locations/global/workloadIdentityPools/hairizuan-personal-github/providers/golang-programming"
         service_account: 'github-actions@${{ secrets.GCP_PROJECT }}.iam.gserviceaccount.com'
 
+    - name: "Set up Cloud SDK"
+      uses: "google-github-actions/setup-gcloud@v1"
+
+    - name: "Use gcloud CLI"
+      run: "gcloud info"
+
+    - name: "List cloud run services"
+      run: "gcloud run services list"
+
