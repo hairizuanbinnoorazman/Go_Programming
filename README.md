@@ -80,7 +80,21 @@ Random advice that makes sense:
 - For functions, pass in interfaces but output structs. This would allow one to be explicit in what functions the person would need - e.g. I need a addAll() function and a removeAll() function to be created. Mantra: Accept native + interfaces but return structs
 - Don't ever use the global variables unless you're thinking of commiting suicide via variable tracing - reason for not doing is that the variable can be manipulated by any function within the package which makes it really really dangerous
 
+## Github actions
 
+The following github actions are setup with Workload Federated Identities. It was manually setup.
+
+- Create a pool for Workload Identity Federation
+- Create a service account + service account token creation + service account OIDC token creation (require confirmation)
+- Grant access to the created pool for the Workload Identity Federation via Service Account. We don't need to save the file - can simply skip the "configuration" file that would inform client libraries how to connect to workload identity
+- Save the "subject" for service account mapping to: "repo:hairizuanbinnoorazman/Go_Programming:ref:refs/heads/master"
+
+Refer to the following resources:
+
+- https://cloud.google.com/blog/products/identity-security/enabling-keyless-authentication-from-github-actions
+- https://cloud.google.com/iam/docs/workload-identity-federation-with-other-providers
+- https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect#configuring-the-subject-in-your-cloud-provider
+- https://github.com/google-github-actions/auth
 
 ## Other Resources
 
