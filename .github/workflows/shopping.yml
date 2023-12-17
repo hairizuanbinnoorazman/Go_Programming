@@ -19,18 +19,18 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: "Set up Cloud SDK"
-      uses: "google-github-actions/setup-gcloud@v1"
-
-    - name: "Use gcloud CLI"
-      run: "gcloud info"
-
     - id: 'auth'
       name: 'Authenticate to Google Cloud'
       uses: 'google-github-actions/auth@v2'
       with:
         workload_identity_provider: "projects/${{ secrets.GCP_PROJECT_ID }}/locations/global/workloadIdentityPools/hairizuan-personal-github/providers/golang-programming"
         service_account: 'github-actions@${{ secrets.GCP_PROJECT }}.iam.gserviceaccount.com'
+
+    - name: "Set up Cloud SDK"
+      uses: "google-github-actions/setup-gcloud@v1"
+
+    - name: "Use gcloud CLI"
+      run: "gcloud info"
 
     - name: "List cloud run services"
       run: "gcloud run services list"
