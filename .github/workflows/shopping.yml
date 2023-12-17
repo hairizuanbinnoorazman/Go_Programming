@@ -55,3 +55,11 @@ jobs:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         provenance: false
+
+    - name: Deploy and update cloud run
+      run: |-
+        gcloud run deploy shopping-list \
+          --image=${{ steps.meta.outputs.tags }} \
+          --region=asia-southeast1 \
+          --allow-unauthenticated
+          
