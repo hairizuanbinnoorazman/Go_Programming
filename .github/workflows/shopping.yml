@@ -32,6 +32,25 @@ jobs:
     - name: "Use gcloud CLI"
       run: "gcloud info"
 
-    - name: "List cloud run services"
-      run: "gcloud run services list"
+    - name: "Creating docker image"
+      run: "gcloud auth configure-docker -q"
 
+    - name: Setup labels for docker image
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: "gcr.io/${{ secrets.GCP_PROJECT }}/shopping-list"
+        tags: |
+          type=sha
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build and push
+      uses: docker/build-push-action@v5
+      with:
+        context: ./Apps/shopping-list
+        file: Dockerfile
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        provenance: false
