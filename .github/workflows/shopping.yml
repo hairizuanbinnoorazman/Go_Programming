@@ -51,7 +51,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: ./Apps/shopping-list
-        file: ./Apps/shopping-list/Dockerfile
+        file: ./Apps/shopping-list/prod.Dockerfile
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         provenance: false
