@@ -6,12 +6,20 @@ on:
       - "master"
     paths:
       - "Apps/shopping-list/**"
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - id: 'auth'
+      name: 'Authenticate to Google Cloud'
+      uses: 'google-github-actions/auth@v0.4.0'
+      with:
+        workload_identity_provider: "projects/${{ secrets.SERVICE_ACCOUNT_KEY }}/locations/global/workloadIdentityPools/hairizuan-personal-github/providers/golang-programming"
+        service_account: 'github-actions@${{ secrets.SERVICE_ACCOUNT_KEY }}.iam.gserviceaccount.com'
 
