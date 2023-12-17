@@ -32,14 +32,15 @@ jobs:
     - name: "Use gcloud CLI"
       run: "gcloud info"
 
-    - name: "Creating docker image"
-      run: "gcloud auth configure-docker -q"
+    - name: "Docker auth"
+      run: |-
+        gcloud auth configure-docker asia-southeast1-docker.pkg.dev --quiet   
 
     - name: Setup labels for docker image
       id: meta
       uses: docker/metadata-action@v5
       with:
-        images: "gcr.io/${{ secrets.GCP_PROJECT }}/shopping-list"
+        images: "asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/personal/shopping-list"
         tags: |
           type=sha
 
