@@ -33,5 +33,8 @@ jobs:
       run: "gcloud info"
 
     - name: "List cloud run services"
+      run: "gcloud auth login"
+
+    - name: "List cloud run services"
       run: "gcloud run services list"
 
