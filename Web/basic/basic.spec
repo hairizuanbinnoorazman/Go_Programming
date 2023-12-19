@@ -1,6 +1,6 @@
 Name:       basic
 Version:    0
-Release:    1
+Release:    3
 Summary:    RPM package to contain basic Golang app
 License:    FIXME
 
@@ -25,7 +25,7 @@ install -m 755 app.service %{buildroot}/etc/systemd/system/basic.service
 
 %pre
 getent group app >/dev/null 2>&1 || groupadd app
-getent passwd app >/dev/null 2>&1 || useradd -G app app
+getent passwd app >/dev/null 2>&1 || useradd -g app app
 
 %post
 chown app:app %{_bindir}/app
@@ -41,7 +41,9 @@ systemctl daemon-reload
 
 %postun
 userdel app
-groupdel app
+if [ $(getent group app) ]; then
+        groupdel app
+fi
 
 %changelog
 # let's skip this for now
