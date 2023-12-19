@@ -7,7 +7,7 @@ After=network-online.target
 User=app
 Group=app
 Restart=on-failure
-ExecStart=/usr/local/bin/app
+ExecStart=/usr/bin/app
 KillSignal=SIGTERM
 
 [Install]

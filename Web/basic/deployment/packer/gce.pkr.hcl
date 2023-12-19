@@ -58,7 +58,7 @@ build {
         inline = [
             "sudo groupadd app",
             "sudo useradd -m -g app app",
-            "sudo mv /home/hairizuan/app /usr/local/bin/app",
+            "sudo mv /home/hairizuan/app /usr/bin/app",
             "sudo mv /home/hairizuan/app.service /etc/systemd/system/app.service",
             "sudo systemctl daemon-reload",
             "sudo systemctl enable app.service"

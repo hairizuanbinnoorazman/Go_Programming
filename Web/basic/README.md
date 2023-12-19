@@ -63,9 +63,9 @@ gcloud compute instances create instance-1 --project=<project id> --zone=us-cent
 Then, scp the binary into the server
 
 ```bash
-scp app hairizuan@<ip hostname>:/usr/local/bin/app
+scp app hairizuan@<ip hostname>:/usr/bin/app
 ssh hairizuan@<ip hostname>
-chmod +x /usr/local/bin/app
+chmod +x /usr/bin/app
 app
 ```
 
