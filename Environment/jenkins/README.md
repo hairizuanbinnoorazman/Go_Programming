@@ -13,3 +13,5 @@ Here are some of the useful references
 - https://github.com/jenkinsci/configuration-as-code-plugin/tree/master/demos/global-matrix-auth
 - https://github.com/jenkinsci/configuration-as-code-plugin/tree/master/demos/role-strategy-auth
   - `role_strategy` plugin required
+- https://jenkinsci.github.io/job-dsl-plugin/
+  - Pretty useful page to understand how to create the initial pipeline jobs
