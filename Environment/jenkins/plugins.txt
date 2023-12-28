@@ -87,3 +87,4 @@ workflow-scm-step
 workflow-step-api
 workflow-support
 configuration-as-code
+job-dsl

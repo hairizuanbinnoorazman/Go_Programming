@@ -14,15 +14,15 @@ jenkins:
             description: "Jenkins administrators"
             permissions:
               - "Overall/Administer"
-            assignments:
-              - "admin"
+            entries:
+              - user: "admin"
           - name: "readonly"
             description: "Read-only users"
             permissions:
               - "Overall/Read"
               - "Job/Read"
-            assignments:
-              - "authenticated"
+            entries:
+              - user: "authenticated"
   crumbIssuer: "standard" 
 credentials:
   system:
@@ -33,3 +33,5 @@ credentials:
               id: admin
               username: admin
               password: password
+jobs:
+  - file: /home/jobs/firstjob.groovy
