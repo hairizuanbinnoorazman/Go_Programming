@@ -9,5 +9,4 @@ pipelineJob("firstjob") {
             sandbox()
         }
     }
-    
 }
