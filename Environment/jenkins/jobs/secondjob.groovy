@@ -5,7 +5,12 @@ pipelineJob("secondjob") {
     definition {
         cpsScm {
             scm {
-                git('git@github.com:hairizuanbinnoorazman/Go_Programming.git')
+                git {
+                    remote {
+                        url('https://github.com/hairizuanbinnoorazman/Go_Programming')
+                    }
+                    branch('master')
+                }
             }
             scriptPath('Environment/jenkins/pipelines/secondjob.Jenkinsfile')
         }
