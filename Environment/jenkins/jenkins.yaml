@@ -38,13 +38,16 @@ jobs:
   - file: /home/jobs/secondjob.groovy
 
 unclassified:
-  scmGit:
-    addGitTagAction: false
-    allowSecondFetch: false
-    createAccountBasedOnEmail: true
-    disableGitToolChooser: false
-    globalConfigEmail: jenkins@domain.local
-    globalConfigName: jenkins
-    hideCredentials: true
-    showEntireCommitSummaryInChanges: true
-    useExistingAccountWithSameEmail: false
+  # scmGit:
+  #   addGitTagAction: false
+  #   allowSecondFetch: false
+  #   createAccountBasedOnEmail: true
+  #   disableGitToolChooser: false
+  #   globalConfigEmail: jenkins@domain.local
+  #   globalConfigName: jenkins
+  #   hideCredentials: true
+  #   showEntireCommitSummaryInChanges: true
+  #   useExistingAccountWithSameEmail: false
+  location:
+    url: http://localhost:8090
+    adminAddress: admin@jenkins.com
