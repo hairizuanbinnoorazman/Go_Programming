@@ -4,5 +4,7 @@ RUN /bin/jenkins-plugin-cli -f /var/jenkins_home/plugins.txt
 COPY jenkins.yaml /var/jenkins_home/jenkins.yaml
 ENV JAVA_OPTS "-Djenkins.install.runSetupWizard=false ${JAVA_OPTS:-}"
 ENV CASC_JENKINS_CONFIG=/var/jenkins_home/jenkins.yaml
+RUN git config --global user.email "you@example.com" && \
+    git config --global user.name "Your Name"
 COPY jobs /home/jobs
 COPY pipelines /home/pipelines
