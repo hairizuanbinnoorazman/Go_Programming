@@ -1,0 +1,19 @@
+version: '3.3'
+
+services:
+  jenkins:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8090:8080
+    restart: always
+    # environment:
+    #   - JAVA_OPTS="-Djenkins.install.runSetupWizard=false ${JAVA_OPTS:-}"
+    #   - CASC_JENKINS_CONFIG=/var/jenkins_home/jenkins.yaml
+    #   - SSH_PRIVATE_FILE_PATH=/home/jenkins/.ssh/ultimate_ssh_key
+  agent:
+    build:
+      context: .
+      dockerfile: agent.Dockerfile
+    restart: always
