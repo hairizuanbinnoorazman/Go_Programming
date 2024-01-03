@@ -24,6 +24,27 @@ jenkins:
             entries:
               - user: "authenticated"
   crumbIssuer: "standard" 
+  numExecutors: 0
+  nodes:
+    - permanent:
+        labelString: "linux"
+        mode: NORMAL
+        name: "zzz"
+        numExecutors: 4
+        remoteFS: "/home/jenkins"
+        launcher:
+          ssh:
+            host: "agent"
+            port: 22
+            javaPath: "/opt/java/openjdk/bin/java"
+            credentialsId: ultimate_ssh_key
+            launchTimeoutSeconds: 60
+            maxNumRetries: 3
+            retryWaitTime: 30
+            sshHostKeyVerificationStrategy:
+              manuallyTrustedKeyVerificationStrategy:
+                requireInitialManualTrust: false
+
 credentials:
   system:
     domainCredentials:
@@ -33,6 +54,14 @@ credentials:
               id: admin
               username: admin
               password: password
+          - basicSSHUserPrivateKey:
+              scope: SYSTEM
+              id: ultimate_ssh_key
+              username: jenkins
+              description: "SSH private key file. Provided via file"
+              privateKeySource:
+                directEntry:
+                  privateKey: "${readFile:${SSH_PRIVATE_FILE_PATH}}" 
 jobs:
   - file: /home/jobs/firstjob.groovy
   - file: /home/jobs/secondjob.groovy
