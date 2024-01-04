@@ -22,9 +22,9 @@ use (
 	./Web/basicUsingDatastore
 	./Web/cooklang
 	./Web/customHPAScalingServer
+	./Web/featureflag
 	./Web/fullObservability
 	./Web/headlessService
 	./Web/leaderElectionWithK8s
 	./Web/sendEmail
-	./Web/featureflag
 )
