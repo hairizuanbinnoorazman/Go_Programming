@@ -9,4 +9,6 @@ RUN git config --global user.email "you@example.com" && \
     git config --global user.name "Your Name"
 COPY jobs /home/jobs
 COPY pipelines /home/pipelines
-COPY --chown=jenkins:jenkins key /home/jenkins/.ssh/ultimate_ssh_key
+USER root
+RUN mkdir -p /home/jenkins/.ssh && chown jenkins:jenkins /home/jenkins/.ssh
+USER jenkins

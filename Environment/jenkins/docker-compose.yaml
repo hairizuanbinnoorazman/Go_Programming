@@ -8,12 +8,18 @@ services:
     ports:
       - 8090:8080
     restart: always
-    # environment:
-    #   - JAVA_OPTS="-Djenkins.install.runSetupWizard=false ${JAVA_OPTS:-}"
-    #   - CASC_JENKINS_CONFIG=/var/jenkins_home/jenkins.yaml
-    #   - SSH_PRIVATE_FILE_PATH=/home/jenkins/.ssh/ultimate_ssh_key
+    volumes:
+      - type: bind
+        source: ./secrets/private
+        target: /home/jenkins/.ssh/
+        read_only: true
   agent:
     build:
       context: .
       dockerfile: agent.Dockerfile
     restart: always
+    volumes:
+      - type: bind
+        source: ./secrets/public
+        target: /home/jenkins/.ssh/
+        read_only: true
