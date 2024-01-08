@@ -1,0 +1,23 @@
+version: '3.3'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: app.Dockerfile
+    restart: always
+  auth:
+    build:
+      context: .
+      dockerfile: auth.Dockerfile
+    restart: always
+  fw:
+    image: nginx:1.25.3
+    ports:
+      - 8080:80
+    restart: always
+    volumes:
+      - type: bind
+        source: ./conf
+        target: /etc/nginx/conf.d/
+        read_only: true
