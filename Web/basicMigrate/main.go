@@ -57,7 +57,10 @@ var migrateCmd = &cobra.Command{
 		if err != nil {
 			panic(fmt.Sprintf("unable to connect to database :: %v", err))
 		}
-		m.Up()
+		err = m.Up()
+		if err != nil {
+			panic(fmt.Sprintf("unable to connect to database :: %v", err))
+		}
 	},
 }
 
