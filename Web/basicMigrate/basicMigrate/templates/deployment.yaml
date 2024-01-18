@@ -38,13 +38,13 @@ spec:
             - "server"
           env:
             - name: DATABASE_USER
-              value: "username"
+              value: {{ .Values.appConfig.databaseUser }}
             - name: DATABASE_PASSWORD
-              value: "password"
+              value: {{ .Values.appConfig.databasePassword }}
             - name: DATABASE_HOST
-              value: "mariadb.default.svc"
+              value: {{ .Values.appConfig.databaseHost }}
             - name: DATABASE_NAME
-              value: "application"
+              value: {{ .Values.appConfig.databaseName }}
           ports:
             - name: http
               containerPort: 8888

@@ -80,3 +80,9 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+appConfig:
+  databaseUser: username
+  databasePassword: password
+  databaseHost: mariadb.default.svc
+  databaseName: application
