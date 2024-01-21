@@ -1,6 +1,6 @@
 image:
-  repository: gcr.io/XXX/basic-migrate
-  tag: "v2"
+  repository: gcr.io/xxx/basic-migrate
+  tag: "v1"
 
 resources:
   limits:
@@ -9,3 +9,6 @@ resources:
   requests:
     cpu: 250m
     memory: 256Mi
+
+appConfig:
+  databaseHost: x.x.x.x
