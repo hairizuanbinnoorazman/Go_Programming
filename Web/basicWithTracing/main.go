@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -87,7 +88,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			},
 		}
 
-		traceClient.Do(req)
+		resp, err := traceClient.Do(req)
+		if err != nil {
+			log.Printf("unable to do query to the url: %v. error: %v\n", clientURL, err)
+			return
+		}
+		rawOutput, _ := io.ReadAll(resp.Body)
+		log.Printf("output of response: %v\n", string(rawOutput))
 	}
 }
 
