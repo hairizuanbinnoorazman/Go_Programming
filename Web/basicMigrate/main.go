@@ -168,7 +168,7 @@ var serverCmd = &cobra.Command{
 		}
 
 		r := mux.NewRouter()
-		r.Handle("/healthz", Status{}).Methods("GET")
+		r.Handle("/health", Status{}).Methods("GET")
 		r.Handle("/user", UserCreate{DB: db}).Methods("POST")
 		r.Handle("/user/{userID}", UserGet{DB: db}).Methods("GET")
 
