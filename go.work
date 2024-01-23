@@ -27,4 +27,5 @@ use (
 	./Web/headlessService
 	./Web/leaderElectionWithK8s
 	./Web/sendEmail
+	./Apps/keyboard
 )
