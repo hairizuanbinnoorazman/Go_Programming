@@ -14,12 +14,15 @@ import (
 	"github.com/gorilla/mux"
 
 	gormMySQL "gorm.io/driver/mysql"
+	gormSQLite "gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
 	"embed"
 
 	migrate "github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/mysql"
+	_ "github.com/golang-migrate/migrate/v4/database/sqlite3"
+	"github.com/golang-migrate/migrate/v4/source"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/spf13/cobra"
 )
@@ -42,21 +45,36 @@ var migrateCmd = &cobra.Command{
 	Use:   "migrate",
 	Short: "Run database migration",
 	Run: func(cmd *cobra.Command, args []string) {
-		d, err := iofs.New(fs, "migrations")
-		if err != nil {
-			log.Fatal(err)
-		}
-
 		dbUser := os.Getenv("DATABASE_USER")
 		dbPass := os.Getenv("DATABASE_PASSWORD")
 		dbHost := os.Getenv("DATABASE_HOST")
 		dbName := os.Getenv("DATABASE_NAME")
 		useTLS := os.Getenv("DATABASE_USE_TLS")
+		dbType := os.Getenv("DATABASE_TYPE")
 
-		dsn := fmt.Sprintf("mysql://%v:%v@(%v:3306)/%v", dbUser, dbPass, dbHost, dbName)
-		if strings.ToLower(useTLS) == "true" {
-			fmt.Println("database tls mode on")
-			dsn = dsn + "?tls=true"
+		var d source.Driver
+		var err error
+		dsn := ""
+		if dbType == "" || dbType == "mysql" {
+			dsn = fmt.Sprintf("mysql://%v:%v@(%v:3306)/%v", dbUser, dbPass, dbHost, dbName)
+			if strings.ToLower(useTLS) == "true" {
+				fmt.Println("database tls mode on")
+				dsn = dsn + "?tls=true"
+			}
+			d, err = iofs.New(fs, "migrations/mysql")
+			if err != nil {
+				log.Fatal(err)
+			}
+		} else if dbType == "sqlite" {
+			sqliteFile := os.Getenv("SQLITE_FILE")
+			dsn = fmt.Sprintf("sqlite3://%s?query", sqliteFile)
+			d, err = iofs.New(fs, "migrations/sqlite")
+			if err != nil {
+				log.Fatal(err)
+			}
+		} else {
+			fmt.Println("unexpected dbType provided. Please check inputs")
+			os.Exit(1)
 		}
 
 		m, err := migrate.NewWithSourceInstance(
@@ -155,14 +173,24 @@ var serverCmd = &cobra.Command{
 		dbHost := os.Getenv("DATABASE_HOST")
 		dbName := os.Getenv("DATABASE_NAME")
 		useTLS := os.Getenv("DATABASE_USE_TLS")
+		dbType := os.Getenv("DATABASE_TYPE")
 
-		dsn := fmt.Sprintf("%v:%v@(%v:3306)/%v", dbUser, dbPass, dbHost, dbName)
-		if strings.ToLower(useTLS) == "true" {
-			fmt.Println("database tls mode on")
-			dsn = dsn + "?tls=true"
+		var dsn string
+		var db *gorm.DB
+		var err error
+		if dbType == "" || dbType == "mysql" {
+			dsn = fmt.Sprintf("%v:%v@(%v:3306)/%v", dbUser, dbPass, dbHost, dbName)
+			if strings.ToLower(useTLS) == "true" {
+				fmt.Println("database tls mode on")
+				dsn = dsn + "?tls=true"
+			}
+			db, err = gorm.Open(gormMySQL.Open(dsn), &gorm.Config{})
+		} else if dbType == "sqlite" {
+			sqliteFile := os.Getenv("SQLITE_FILE")
+			dsn = fmt.Sprintf("%s?query", sqliteFile)
+			db, err = gorm.Open(gormSQLite.Open(dsn), &gorm.Config{})
 		}
 
-		db, err := gorm.Open(gormMySQL.Open(dsn), &gorm.Config{})
 		if err != nil {
 			panic(fmt.Sprintf("unable to connect to database :: %v", err))
 		}
