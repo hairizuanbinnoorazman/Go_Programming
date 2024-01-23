@@ -4,7 +4,7 @@ COPY go.mod .
 COPY go.sum .
 RUN go mod download
 COPY . .
-RUN go build -o app .
+RUN CGO_ENABLED=0 go build -o app .
 
 FROM debian:bookworm-slim
 RUN apt update && \
