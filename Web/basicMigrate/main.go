@@ -3,11 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
@@ -50,14 +51,25 @@ var migrateCmd = &cobra.Command{
 		dbPass := os.Getenv("DATABASE_PASSWORD")
 		dbHost := os.Getenv("DATABASE_HOST")
 		dbName := os.Getenv("DATABASE_NAME")
+		useTLS := os.Getenv("DATABASE_USE_TLS")
+
+		dsn := fmt.Sprintf("mysql://%v:%v@(%v:3306)/%v", dbUser, dbPass, dbHost, dbName)
+		if strings.ToLower(useTLS) == "true" {
+			fmt.Println("database tls mode on")
+			dsn = dsn + "?tls=true"
+		}
 
 		m, err := migrate.NewWithSourceInstance(
-			"iofs", d, fmt.Sprintf("mysql://%v:%v@(%v:3306)/%v", dbUser, dbPass, dbHost, dbName))
+			"iofs", d, dsn)
 
 		if err != nil {
 			panic(fmt.Sprintf("unable to connect to database :: %v", err))
 		}
 		err = m.Up()
+		if err == migrate.ErrNoChange {
+			fmt.Println("no change to database")
+			os.Exit(0)
+		}
 		if err != nil {
 			panic(fmt.Sprintf("unable to connect to database :: %v", err))
 		}
@@ -105,7 +117,7 @@ type UserCreate struct {
 }
 
 func (h UserCreate) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	raw, err := ioutil.ReadAll(r.Body)
+	raw, err := io.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("bad request"))
@@ -142,7 +154,14 @@ var serverCmd = &cobra.Command{
 		dbPass := os.Getenv("DATABASE_PASSWORD")
 		dbHost := os.Getenv("DATABASE_HOST")
 		dbName := os.Getenv("DATABASE_NAME")
-		dsn := fmt.Sprintf("%v:%v@tcp(%v:3306)/%v", dbUser, dbPass, dbHost, dbName)
+		useTLS := os.Getenv("DATABASE_USE_TLS")
+
+		dsn := fmt.Sprintf("%v:%v@(%v:3306)/%v", dbUser, dbPass, dbHost, dbName)
+		if strings.ToLower(useTLS) == "true" {
+			fmt.Println("database tls mode on")
+			dsn = dsn + "?tls=true"
+		}
+
 		db, err := gorm.Open(gormMySQL.Open(dsn), &gorm.Config{})
 		if err != nil {
 			panic(fmt.Sprintf("unable to connect to database :: %v", err))
