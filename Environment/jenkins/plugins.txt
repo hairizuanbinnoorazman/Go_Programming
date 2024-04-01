@@ -89,3 +89,6 @@ workflow-support
 configuration-as-code
 job-dsl
 ssh-slaves
+antisamy-markup-formatter
+parameterized-scheduler
+yet-another-build-visualizer
