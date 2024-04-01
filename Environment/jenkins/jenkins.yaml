@@ -1,5 +1,8 @@
 jenkins:
   systemMessage: Jenkins managed via Configuration as Code
+  markupFormatter:
+    rawHtml:
+      disableSyntaxHighlighting: false
   securityRealm:
     local:
       allowsSignup: false
