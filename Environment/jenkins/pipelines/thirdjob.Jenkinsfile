@@ -6,7 +6,7 @@ pipeline {
             steps {
                 echo 'Start job...'
                 sleep 10
-                echo 'Name: ${params.name}'
+                echo "Name: ${name}"
             }
         }
     }
