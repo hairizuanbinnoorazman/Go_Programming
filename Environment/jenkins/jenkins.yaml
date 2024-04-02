@@ -66,8 +66,9 @@ credentials:
                 directEntry:
                   privateKey: "${readFile:${SSH_PRIVATE_FILE_PATH}}" 
 jobs:
-  - file: /home/jobs/firstjob.groovy
-  - file: /home/jobs/secondjob.groovy
+  - file: /home/jobs/01sample.groovy
+  - file: /home/jobs/02sample.groovy
+  - file: /home/jobs/03sample.groovy
 
 unclassified:
   # scmGit:
