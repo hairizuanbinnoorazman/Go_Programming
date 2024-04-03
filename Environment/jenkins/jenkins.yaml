@@ -69,6 +69,7 @@ jobs:
   - file: /home/jobs/01sample.groovy
   - file: /home/jobs/02sample.groovy
   - file: /home/jobs/03sample.groovy
+  - file: /home/jobs/04sample.groovy
 
 unclassified:
   # scmGit:
