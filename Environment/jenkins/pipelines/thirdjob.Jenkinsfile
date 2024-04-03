@@ -8,7 +8,7 @@ pipeline {
                 sleep 10
                 echo "Name: ${name}"
                 script {
-                    currentBuild.name = "${name}"
+                    currentBuild.displayName = "${name}"
                 }
             }
         }
