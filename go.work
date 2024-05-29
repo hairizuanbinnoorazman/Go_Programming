@@ -1,12 +1,14 @@
-go 1.21.5
+go 1.21.8
 
 use (
 	./Apps/appwithmysql
 	./Apps/basic-app
 	./Apps/bus-arrival
 	./Apps/googlecompute
+	./Apps/keyboard
 	./Apps/shopping-list
 	./Apps/urlShortener
+	./Basics/s3
 	./Web/analytics
 	./Web/basic
 	./Web/basicFileNotify
@@ -27,5 +29,4 @@ use (
 	./Web/headlessService
 	./Web/leaderElectionWithK8s
 	./Web/sendEmail
-	./Apps/keyboard
 )
