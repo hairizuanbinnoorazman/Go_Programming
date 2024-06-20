@@ -1,4 +1,4 @@
-go 1.21.8
+go 1.21.11
 
 use (
 	./Apps/appwithmysql
@@ -9,6 +9,7 @@ use (
 	./Apps/shopping-list
 	./Apps/urlShortener
 	./Basics/s3
+	./Socket/BasicRedisInterface
 	./Web/analytics
 	./Web/basic
 	./Web/basicFileNotify
