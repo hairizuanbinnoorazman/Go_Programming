@@ -28,6 +28,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
+	github.com/mattn/go-sqlite3 v1.14.17 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc2 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
