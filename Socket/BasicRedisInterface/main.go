@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"strconv"
 	"strings"
 )
 
@@ -19,14 +20,42 @@ func main() {
 		conn, _ := ln.Accept()
 		scanner := bufio.NewScanner(conn)
 		c := Command{sstore: sstore, store: store, conn: conn}
-		inputEntry := 0
+		// inputEntry := 0
+		expectedBrokenUpItems := 0
+		zzz := []string{}
 		for {
 			if ok := scanner.Scan(); !ok {
 				break
 			}
 			rawInput := scanner.Text()
 			fmt.Printf("Obtained input: %v\n", rawInput)
-			zzz := strings.Split(rawInput, " ")
+			if string(rawInput[0]) == "*" {
+				fmt.Println("Broken up mode detected...")
+				processedInput := strings.Replace(rawInput, "*", "", -1)
+				expectedBrokenUpItems, _ = strconv.Atoi(processedInput)
+				continue
+			}
+
+			if expectedBrokenUpItems > 0 {
+				fmt.Println("In broken up command mode")
+				if string(rawInput[0]) == "$" {
+					fmt.Println("we're processing this crap")
+					continue
+				}
+
+				zzz = append(zzz, rawInput)
+
+				if len(zzz) < expectedBrokenUpItems {
+					fmt.Println("Insufficient values for broken up input")
+					continue
+				}
+
+				expectedBrokenUpItems = 0
+			}
+
+			if len(zzz) == 0 {
+				zzz = strings.Split(rawInput, " ")
+			}
 			c.name = zzz[0]
 			c.inputs = zzz[1:]
 			// if inputEntry == 2 {
@@ -42,7 +71,8 @@ func main() {
 			// 	c.itemVal2 = rawInput
 			// }
 			c.Run()
-			inputEntry = inputEntry + 1
+			zzz = []string{}
+			// inputEntry = inputEntry + 1
 		}
 	}
 }
@@ -67,9 +97,12 @@ func (c *Command) Run() {
 		return
 	}
 	if c.name == "set" {
-		if len(c.inputs) != 2 {
+		if len(c.inputs) <= 3 {
 			c.conn.Write([]byte(errorStr))
 			return
+		}
+		if len(c.inputs) == 3 {
+			fmt.Println("we will ignore time expiry for now")
 		}
 		c.sstore[c.inputs[0]] = c.inputs[1]
 		c.conn.Write([]byte("+OK\r\n"))
@@ -95,6 +128,64 @@ func (c *Command) Run() {
 		c.conn.Write([]byte(fmt.Sprintf(":%v\r\n", len(c.store[c.inputs[0]]))))
 		return
 	}
+
+	if c.name == "hello" {
+		if len(c.inputs) != 1 {
+			c.conn.Write([]byte("-ERR"))
+			return
+		}
+		items := [][]string{
+			{"server", "redis"},
+			{"version", "7.2.5"},
+			{"proto", ":3"},
+			{"id", ":13"},
+			{"mode", "standalone"},
+			{"role", "master"},
+			{"modules", "*0"},
+		}
+		c.conn.Write([]byte(fmt.Sprintf("%%%v\r\n", len(items))))
+		for _, aaa := range items {
+			k := aaa[0]
+			v := aaa[1]
+			c.conn.Write([]byte(fmt.Sprintf("$%v\r\n", len(k))))
+			c.conn.Write([]byte(k + "\r\n"))
+			if k == "proto" || k == "id" || k == "modules" {
+				c.conn.Write([]byte(v + "\r\n"))
+			} else {
+				c.conn.Write([]byte(fmt.Sprintf("$%v\r\n", len(v))))
+				c.conn.Write([]byte(v + "\r\n"))
+			}
+		}
+		return
+
+		// 		%7
+		// $6
+		// server
+		// $5
+		// redis
+		// $7
+		// version
+		// $5
+		// 7.2.5
+		// $5
+		// proto
+		// :3
+		// $2
+		// id
+		// :13
+		// $4
+		// mode
+		// $10
+		// standalone
+		// $4
+		// role
+		// $6
+		// master
+		// $7
+		// modules
+		// *0
+	}
+
 	// if c.name == "lrange" && c.listName != "" && c.itemVal != "" && c.itemVal2 != "" {
 	// 	// c.itemVal is "starting value"
 	// 	// c.itemVal2 is "ending value" - if more -> it would mean everything
