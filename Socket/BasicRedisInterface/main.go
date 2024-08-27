@@ -4,13 +4,21 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 )
 
+var enableHelloCommand bool = false
+var enableBrokenUpCommands bool = false
+
 func main() {
 	fmt.Println("Start server")
 	defer fmt.Println("Stop server")
+
+	_, enableHelloCommand = os.LookupEnv("ENABLE_HELLO_COMMAND")
+	_, enableBrokenUpCommands = os.LookupEnv("ENABLE_BROKEN_UP_COMMANDS")
+
 	ln, _ := net.Listen("tcp", ":9999")
 
 	sstore := map[string]string{}
@@ -29,28 +37,31 @@ func main() {
 			}
 			rawInput := scanner.Text()
 			fmt.Printf("Obtained input: %v\n", rawInput)
-			if string(rawInput[0]) == "*" {
-				fmt.Println("Broken up mode detected...")
-				processedInput := strings.Replace(rawInput, "*", "", -1)
-				expectedBrokenUpItems, _ = strconv.Atoi(processedInput)
-				continue
-			}
 
-			if expectedBrokenUpItems > 0 {
-				fmt.Println("In broken up command mode")
-				if string(rawInput[0]) == "$" {
-					fmt.Println("we're processing this crap")
+			if enableBrokenUpCommands {
+				if string(rawInput[0]) == "*" {
+					fmt.Println("Broken up mode detected...")
+					processedInput := strings.Replace(rawInput, "*", "", -1)
+					expectedBrokenUpItems, _ = strconv.Atoi(processedInput)
 					continue
 				}
 
-				zzz = append(zzz, rawInput)
+				if expectedBrokenUpItems > 0 {
+					fmt.Println("In broken up command mode")
+					if string(rawInput[0]) == "$" {
+						fmt.Println("we're processing this crap")
+						continue
+					}
 
-				if len(zzz) < expectedBrokenUpItems {
-					fmt.Println("Insufficient values for broken up input")
-					continue
+					zzz = append(zzz, rawInput)
+
+					if len(zzz) < expectedBrokenUpItems {
+						fmt.Println("Insufficient values for broken up input")
+						continue
+					}
+
+					expectedBrokenUpItems = 0
 				}
-
-				expectedBrokenUpItems = 0
 			}
 
 			if len(zzz) == 0 {
@@ -93,11 +104,11 @@ func (c *Command) Run() {
 	errorStr := "-ERR syntax error\r\n"
 
 	if c.name == "ping" {
-		PrintPong(c.conn)
+		c.conn.Write([]byte("+PONG\r\n"))
 		return
 	}
 	if c.name == "set" {
-		if len(c.inputs) <= 3 {
+		if len(c.inputs) < 2 {
 			c.conn.Write([]byte(errorStr))
 			return
 		}
@@ -129,61 +140,63 @@ func (c *Command) Run() {
 		return
 	}
 
-	if c.name == "hello" {
-		if len(c.inputs) != 1 {
-			c.conn.Write([]byte("-ERR"))
-			return
-		}
-		items := [][]string{
-			{"server", "redis"},
-			{"version", "7.2.5"},
-			{"proto", ":3"},
-			{"id", ":13"},
-			{"mode", "standalone"},
-			{"role", "master"},
-			{"modules", "*0"},
-		}
-		c.conn.Write([]byte(fmt.Sprintf("%%%v\r\n", len(items))))
-		for _, aaa := range items {
-			k := aaa[0]
-			v := aaa[1]
-			c.conn.Write([]byte(fmt.Sprintf("$%v\r\n", len(k))))
-			c.conn.Write([]byte(k + "\r\n"))
-			if k == "proto" || k == "id" || k == "modules" {
-				c.conn.Write([]byte(v + "\r\n"))
-			} else {
-				c.conn.Write([]byte(fmt.Sprintf("$%v\r\n", len(v))))
-				c.conn.Write([]byte(v + "\r\n"))
+	if enableHelloCommand {
+		if c.name == "hello" {
+			if len(c.inputs) != 1 {
+				c.conn.Write([]byte("-ERR"))
+				return
 			}
-		}
-		return
+			items := [][]string{
+				{"server", "redis"},
+				{"version", "7.2.5"},
+				{"proto", ":3"},
+				{"id", ":13"},
+				{"mode", "standalone"},
+				{"role", "master"},
+				{"modules", "*0"},
+			}
+			c.conn.Write([]byte(fmt.Sprintf("%%%v\r\n", len(items))))
+			for _, aaa := range items {
+				k := aaa[0]
+				v := aaa[1]
+				c.conn.Write([]byte(fmt.Sprintf("$%v\r\n", len(k))))
+				c.conn.Write([]byte(k + "\r\n"))
+				if k == "proto" || k == "id" || k == "modules" {
+					c.conn.Write([]byte(v + "\r\n"))
+				} else {
+					c.conn.Write([]byte(fmt.Sprintf("$%v\r\n", len(v))))
+					c.conn.Write([]byte(v + "\r\n"))
+				}
+			}
+			return
 
-		// 		%7
-		// $6
-		// server
-		// $5
-		// redis
-		// $7
-		// version
-		// $5
-		// 7.2.5
-		// $5
-		// proto
-		// :3
-		// $2
-		// id
-		// :13
-		// $4
-		// mode
-		// $10
-		// standalone
-		// $4
-		// role
-		// $6
-		// master
-		// $7
-		// modules
-		// *0
+			// 		%7
+			// $6
+			// server
+			// $5
+			// redis
+			// $7
+			// version
+			// $5
+			// 7.2.5
+			// $5
+			// proto
+			// :3
+			// $2
+			// id
+			// :13
+			// $4
+			// mode
+			// $10
+			// standalone
+			// $4
+			// role
+			// $6
+			// master
+			// $7
+			// modules
+			// *0
+		}
 	}
 
 	// if c.name == "lrange" && c.listName != "" && c.itemVal != "" && c.itemVal2 != "" {
@@ -206,9 +219,8 @@ func (c *Command) Run() {
 	// 	fmt.Println(processed)
 	// 	c.conn.Write([]byte(processed))
 	// }
-	fmt.Printf("-ERR unknown command '%v', with args beginning with %v:\r\n", c.name, c.inputs)
-}
 
-func PrintPong(conn net.Conn) {
-	conn.Write([]byte("+PONG\r\n"))
+	// We can return or not return this...
+	// responseText := fmt.Sprintf("-ERR unknown command '%v', with args beginning with %v:\r\n", c.name, c.inputs)
+	// c.conn.Write([]byte(responseText))
 }
