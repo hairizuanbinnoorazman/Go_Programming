@@ -10,8 +10,8 @@ import (
 
 func main() {
 	rdb := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
-		// Addr:     "localhost:9999",
+		// Addr: "localhost:6379",
+		Addr:     "localhost:9999",
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
