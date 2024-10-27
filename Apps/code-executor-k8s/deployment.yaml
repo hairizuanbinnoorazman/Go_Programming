@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: zzz
+  name: zzz
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: zzz
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: zzz
+    spec:
+      serviceAccountName: serviceacc
+      containers:
+      - command:
+        - /opt/app
+        image: lol:v4
+        imagePullPolicy: Never
+        name: lol
+        resources: {}
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: default
+  name: listpodser
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["create", "get", "list", "delete"]
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["get", "list", "create", "delete"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: default
+  name: service-listpodser
+subjects:
+  - kind: ServiceAccount
+    name: serviceacc 
+    apiGroup: ""
+roleRef:
+  kind: Role
+  name: listpodser
+  apiGroup: ""
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: serviceacc
+  namespace: default
