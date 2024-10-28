@@ -1,0 +1,19 @@
+<html>
+    <head></head>
+    <body>
+        <h1>Testing</h1>
+        <div>
+            <label for="language">Language:</label>
+            <select name="language" id="language" form="codeform">
+                <option value="python">Python</option>
+                <option value="golang">Golang</option>
+            </select>
+            <br><br>
+            <form action="/submit-code" method="post" id="codeform">
+                <label for="code">Code:</label>
+                <input type="text" id="code" name="code"><br><br>
+                <input type="submit" value="Submit">
+            </form>
+        </div>
+    </body>
+</html>
