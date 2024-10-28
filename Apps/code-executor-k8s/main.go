@@ -73,13 +73,7 @@ func main() {
 		c.deleteJob("test-test")
 		c.deleteConfigmap("test-test")
 		c.createCodeConfigmap()
-		jj := c.createJob()
-		fmt.Printf("Completions: %v\n", *jj.Spec.Completions)
-		time.Sleep(10 * time.Second)
-		if *jj.Spec.Completions < 1 {
-			fmt.Println("still waiting for job to complete")
-			time.Sleep(5 * time.Second)
-		}
+		c.createJob()
 		podName, err := c.getPodName("zzz=zzz")
 		if err != nil {
 			fmt.Printf("require further investigation: %v\n", err)
@@ -217,7 +211,6 @@ func (c codeHandler) createJob() *batchv1.Job {
 			Name: "test-test",
 		},
 		Spec: batchv1.JobSpec{
-
 			Parallelism: int32Ptr(1),
 			Completions: int32Ptr(1),
 			Template: core.PodTemplateSpec{
@@ -261,5 +254,24 @@ func (c codeHandler) createJob() *batchv1.Job {
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	getOpts := metav1.GetOptions{}
+	for i := 0; i < 20; i++ {
+		jj, err := c.client.BatchV1().Jobs(c.workingNamespace).Get(context.TODO(), "test-test", getOpts)
+		if err != nil {
+			fmt.Println("error in getting value for job")
+			time.Sleep(5 * time.Second)
+			continue
+		}
+		fmt.Printf("succeeded: %v :: failed: %v\n", jj.Status.Succeeded, jj.Status.Failed)
+		if (jj.Status.Succeeded + jj.Status.Failed) < 1 {
+			fmt.Println("still waiting for job to complete")
+			time.Sleep(5 * time.Second)
+		} else {
+			fmt.Println("a condition was hit. we wil exit here")
+			break
+		}
+	}
+
 	return jj
 }
