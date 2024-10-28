@@ -16,3 +16,9 @@ Cleanup pods
 ```bash
 kubectl delete pods $(kubectl get pods | grep test-test | awk '{print $1}')
 ```
+
+Expose node port
+
+```
+minikube service my-service --url
+```

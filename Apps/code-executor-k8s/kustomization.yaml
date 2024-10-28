@@ -6,6 +6,6 @@ kind: Kustomization
 # app: hello
 images:
   - name: lol
-    newTag: v37
+    newTag: v61
 resources:
   - deployment.yaml
