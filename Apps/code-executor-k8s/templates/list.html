@@ -1,0 +1,28 @@
+<html>
+    <head></head>
+    <body>
+        <h1>List Codes</h1>
+        <div>
+            <p>{{ .Count }} submissions found</p>
+            <a href="/submit-code-page">Submit new code submissions</a>
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Language</th>
+                    <th>Status</th>
+                    <th>Date Submitted</th>
+                    <th>Date Completed</th>
+                </tr>
+                {{ range .Items }}
+                <tr>
+                    <td><a href="/get-code/{{ .ID }}">{{ .ID }}</a></td>
+                    <td>{{ .Language }}</td>
+                    <td>{{ .Status }}</td>
+                    <td>{{ .DateSubmitted }}</td>
+                    <td>{{ .DateCompleted }}</td>
+                </tr>
+                {{ end }}
+            </table>
+        </div>
+    </body>
+</html>

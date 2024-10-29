@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"embed"
-	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
@@ -171,11 +170,35 @@ type listCode struct {
 }
 
 func (l listCode) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	aa := ""
-	for _, z := range l.zz.Items {
-		aa = aa + fmt.Sprintf("%v\n", z)
+
+	type zzz struct {
+		ID            string
+		Language      string
+		Status        string
+		DateSubmitted string
+		DateCompleted string
 	}
-	w.Write([]byte(aa))
+	type tmplVar struct {
+		Items []zzz
+		Count int
+	}
+	aa := []zzz{}
+	for hh, z := range l.zz.Items {
+		aa = append(aa, zzz{
+			ID:            hh,
+			Language:      z.Language,
+			Status:        z.Status,
+			DateSubmitted: z.SubmittedTime.Format(time.RFC3339),
+			DateCompleted: z.CompletedTime.Format(time.RFC3339),
+		})
+	}
+	t, err := template.ParseFS(viewsFS, "templates/list.html")
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(fmt.Sprintf("%v", err)))
+		return
+	}
+	t.Execute(w, tmplVar{Items: aa, Count: len(aa)})
 }
 
 type getCode struct {
@@ -183,24 +206,38 @@ type getCode struct {
 }
 
 func (g getCode) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	uid := r.FormValue("id")
+	uid := mux.Vars(r)["uid"]
 	singleRecord := g.zz.Items[uid]
-	aa := map[string]string{
-		"code":          singleRecord.Code,
-		"language":      singleRecord.Language,
-		"status":        singleRecord.Status,
-		"logs":          singleRecord.Logs,
-		"submittedTime": singleRecord.SubmittedTime.Format(time.RFC3339),
-		"compltedTime":  singleRecord.CompletedTime.Format(time.RFC3339),
+	type zzz struct {
+		ID            string
+		Code          string
+		Language      string
+		Status        string
+		Logs          string
+		DateSubmitted string
+		DateCompleted string
 	}
-	newRaw, err := json.Marshal(aa)
+	z := zzz{
+		ID:            uid,
+		Code:          singleRecord.Code,
+		Language:      singleRecord.Language,
+		Status:        singleRecord.Status,
+		Logs:          singleRecord.Logs,
+		DateSubmitted: singleRecord.SubmittedTime.Format(time.RFC3339),
+		DateCompleted: singleRecord.CompletedTime.Format(time.RFC3339),
+	}
+	fmt.Println(singleRecord)
+	t, err := template.ParseFS(viewsFS, "templates/code.html")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(fmt.Sprintf("bad status: %v", err)))
+		w.Write([]byte(fmt.Sprintf("%v", err)))
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	w.Write(newRaw)
+	err = t.Execute(w, z)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(fmt.Sprintf("%v", err)))
+	}
 }
 
 type codeHandler struct {
