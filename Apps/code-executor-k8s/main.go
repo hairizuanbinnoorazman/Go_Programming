@@ -46,30 +46,25 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
-	_ = codeHandler{
+	cHandler := codeHandler{
 		client:           clientset,
 		workingNamespace: "default",
 	}
-	// for {
-	// 	c.deleteJob("test-test")
-	// 	c.deleteConfigmap("test-test")
-	// 	c.createCodeConfigmap("test-test", "import time\ntime.sleep(30)\nprint(\"test\")")
-	// 	c.createJob("test-test", "test-test")
-	// 	podName, err := c.getPodName("zzz=zzz")
-	// 	if err != nil {
-	// 		fmt.Printf("require further investigation: %v\n", err)
-	// 		continue
-	// 	}
-	// 	yahoo := c.getPodLogs(podName)
-	// 	fmt.Printf("Logs from pod: %v\n", yahoo)
-	// }
 	items := make(map[string]codeRecord)
 	zzz := cdb{Items: items}
 	r := mux.NewRouter()
 
+	aa := make(chan codeRecord)
+	jLooper := jobLooper{
+		cc: aa,
+		c:  cHandler,
+		zz: zzz,
+	}
+	go jLooper.start()
+
 	r.Handle("/status", status{}).Methods(http.MethodGet)
 	r.Handle("/submit-code-page", submitCodePage{}).Methods(http.MethodGet)
-	r.Handle("/submit-code", submitCode{zz: zzz}).Methods(http.MethodPost)
+	r.Handle("/submit-code", submitCode{zz: zzz, hh: aa}).Methods(http.MethodPost)
 	r.Handle("/list-code", listCode{zz: zzz}).Methods(http.MethodGet, http.MethodPost)
 	r.Handle("/get-code/{uid}", getCode{zz: zzz}).Methods(http.MethodGet)
 	srv := &http.Server{
@@ -96,6 +91,7 @@ type codeDB interface {
 }
 
 type codeRecord struct {
+	ID            string
 	Language      string
 	Code          string
 	Status        string
@@ -110,6 +106,7 @@ type cdb struct {
 
 func (c cdb) Store(id, language, code, status string, submittedTime time.Time) {
 	c.Items[id] = codeRecord{
+		ID:            id,
 		Language:      language,
 		Code:          code,
 		Status:        status,
@@ -151,6 +148,7 @@ func (s submitCodePage) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 type submitCode struct {
 	zz cdb
+	hh chan codeRecord
 }
 
 func (s submitCode) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -161,6 +159,8 @@ func (s submitCode) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	status := "submitted"
 	submittedTime := time.Now()
 	s.zz.Store(uid.String(), language, code, status, submittedTime)
+	oo := s.zz.Items[uid.String()]
+	s.hh <- oo
 	fmt.Printf("ID record created: %v\n", uid.String())
 	http.Redirect(w, r, "/list-code", http.StatusTemporaryRedirect)
 }
@@ -344,7 +344,7 @@ func (c codeHandler) deleteJob(jobName string) error {
 	return fmt.Errorf("job can still be found - need to investigate")
 }
 
-func (c codeHandler) createJob(jobName, configmapName string) *batchv1.Job {
+func (c codeHandler) createJob(jobName, configmapName string) bool {
 	fmt.Println("start creating create job test-test")
 	jConfig := batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
@@ -390,28 +390,61 @@ func (c codeHandler) createJob(jobName, configmapName string) *batchv1.Job {
 		},
 	}
 	createOpts := metav1.CreateOptions{}
-	jj, err := c.client.BatchV1().Jobs(c.workingNamespace).Create(context.TODO(), &jConfig, createOpts)
+	_, err := c.client.BatchV1().Jobs(c.workingNamespace).Create(context.TODO(), &jConfig, createOpts)
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	getOpts := metav1.GetOptions{}
+	var jget *batchv1.Job
 	for i := 0; i < 20; i++ {
-		jj, err := c.client.BatchV1().Jobs(c.workingNamespace).Get(context.TODO(), jobName, getOpts)
+		jget, err = c.client.BatchV1().Jobs(c.workingNamespace).Get(context.TODO(), jobName, getOpts)
 		if err != nil {
 			fmt.Println("error in getting value for job")
 			time.Sleep(5 * time.Second)
 			continue
 		}
-		fmt.Printf("succeeded: %v :: failed: %v\n", jj.Status.Succeeded, jj.Status.Failed)
-		if (jj.Status.Succeeded + jj.Status.Failed) < 1 {
-			fmt.Println("still waiting for job to complete")
-			time.Sleep(5 * time.Second)
-		} else {
-			fmt.Println("a condition was hit. we wil exit here")
+		fmt.Printf("succeeded: %v :: failed: %v\n", jget.Status.Succeeded, jget.Status.Failed)
+		if (jget.Status.Succeeded + jget.Status.Failed) >= 1 {
 			break
 		}
+		fmt.Println("still waiting for job to complete")
+		time.Sleep(5 * time.Second)
 	}
+	return jget.Status.Succeeded >= 1
+}
 
-	return jj
+type jobLooper struct {
+	cc chan codeRecord
+	c  codeHandler
+	zz cdb
+}
+
+func (jl jobLooper) start() {
+	fmt.Println("start job looper")
+	for {
+		select {
+		case msg := <-jl.cc:
+			fmt.Printf("Code Record received: %v\n", msg)
+			jl.zz.Update(msg.ID, "running", "", time.Now())
+			jl.c.deleteJob("test-test")
+			jl.c.deleteConfigmap("test-test")
+			jl.c.createCodeConfigmap("test-test", msg.Code)
+			jobStatus := jl.c.createJob("test-test", "test-test")
+			podName, err := jl.c.getPodName("zzz=zzz")
+			if err != nil {
+				fmt.Printf("require further investigation: %v\n", err)
+				continue
+			}
+			yahoo := jl.c.getPodLogs(podName)
+			if jobStatus {
+				jl.zz.Update(msg.ID, "completed", yahoo, time.Now())
+			} else {
+				jl.zz.Update(msg.ID, "failed", yahoo, time.Now())
+			}
+			// Cleanup
+			jl.c.deleteJob("test-test")
+			jl.c.deleteConfigmap("test-test")
+		}
+	}
 }
