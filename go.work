@@ -1,9 +1,12 @@
-go 1.21.11
+go 1.22.0
+
+toolchain go1.22.0
 
 use (
 	./Apps/appwithmysql
 	./Apps/basic-app
 	./Apps/bus-arrival
+	./Apps/code-executor-k8s
 	./Apps/googlecompute
 	./Apps/keyboard
 	./Apps/shopping-list
