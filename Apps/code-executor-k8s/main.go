@@ -54,7 +54,8 @@ func main() {
 	zzz := cdb{Items: items}
 	r := mux.NewRouter()
 
-	aa := make(chan codeRecord)
+	// Make code submissions non-blocking
+	aa := make(chan codeRecord, 200)
 	jLooper := jobLooper{
 		cc: aa,
 		c:  cHandler,
@@ -65,7 +66,7 @@ func main() {
 	r.Handle("/status", status{}).Methods(http.MethodGet)
 	r.Handle("/submit-code-page", submitCodePage{}).Methods(http.MethodGet)
 	r.Handle("/submit-code", submitCode{zz: zzz, hh: aa}).Methods(http.MethodPost)
-	r.Handle("/list-code", listCode{zz: zzz}).Methods(http.MethodGet, http.MethodPost)
+	r.Handle("/list-code", listCode{zz: zzz}).Methods(http.MethodGet)
 	r.Handle("/get-code/{uid}", getCode{zz: zzz}).Methods(http.MethodGet)
 	srv := &http.Server{
 		Handler: r,
@@ -162,7 +163,7 @@ func (s submitCode) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	oo := s.zz.Items[uid.String()]
 	s.hh <- oo
 	fmt.Printf("ID record created: %v\n", uid.String())
-	http.Redirect(w, r, "/list-code", http.StatusTemporaryRedirect)
+	http.Redirect(w, r, "/list-code", http.StatusSeeOther)
 }
 
 type listCode struct {
