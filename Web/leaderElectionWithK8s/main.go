@@ -43,7 +43,7 @@ func main() {
 
 	POD_NAME := os.Getenv("POD_NAME")
 
-	rl, err := resourcelock.NewFromKubeconfig(resourcelock.ConfigMapsLeasesResourceLock, "default", "app-lock", resourcelock.ResourceLockConfig{
+	rl, err := resourcelock.NewFromKubeconfig(resourcelock.LeasesResourceLock, "default", "app-lock", resourcelock.ResourceLockConfig{
 		Identity: POD_NAME,
 	}, config, 10*time.Second)
 	if err != nil {
