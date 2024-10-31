@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -37,6 +38,10 @@ func int32Ptr(a int32) *int32 {
 
 func int64Ptr(a int64) *int64 {
 	return &a
+}
+
+func replaceNewline(s string) template.HTML {
+	return template.HTML(strings.ReplaceAll(template.HTMLEscapeString(s), "\n", "<br>"))
 }
 
 func main() {
@@ -216,19 +221,19 @@ func (g getCode) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	singleRecord := g.zz.Items[uid]
 	type zzz struct {
 		ID            string
-		Code          string
+		Code          template.HTML
 		Language      string
 		Status        string
-		Logs          string
+		Logs          template.HTML
 		DateSubmitted string
 		DateCompleted string
 	}
 	z := zzz{
 		ID:            uid,
-		Code:          singleRecord.Code,
+		Code:          replaceNewline(singleRecord.Code),
 		Language:      singleRecord.Language,
 		Status:        singleRecord.Status,
-		Logs:          singleRecord.Logs,
+		Logs:          replaceNewline(singleRecord.Logs),
 		DateSubmitted: singleRecord.SubmittedTime.Format(time.RFC3339),
 		DateCompleted: singleRecord.CompletedTime.Format(time.RFC3339),
 	}
@@ -274,6 +279,8 @@ func (c codeHandler) getPodName(labelFilter string) (string, error) {
 func (c codeHandler) getPodLogs(podName string) string {
 	podLogOpts := core.PodLogOptions{
 		Container: "test",
+		// To deal with scripts that create huge logs
+		TailLines: int64Ptr(200),
 	}
 	req := c.client.CoreV1().Pods(c.workingNamespace).GetLogs(podName, &podLogOpts)
 	zz, err := req.Stream(context.TODO())
@@ -357,8 +364,10 @@ func (c codeHandler) createJob(jobName, configmapName string) bool {
 			Name: jobName,
 		},
 		Spec: batchv1.JobSpec{
-			Parallelism: int32Ptr(1),
-			Completions: int32Ptr(1),
+			Parallelism:             int32Ptr(1),
+			Completions:             int32Ptr(1),
+			TTLSecondsAfterFinished: int32Ptr(300),
+			BackoffLimit:            int32Ptr(1),
 			Template: core.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
@@ -366,6 +375,8 @@ func (c codeHandler) createJob(jobName, configmapName string) bool {
 					},
 				},
 				Spec: core.PodSpec{
+					ActiveDeadlineSeconds:        int64Ptr(30),
+					RestartPolicy:                core.RestartPolicyNever,
 					ServiceAccountName:           "serviceacc",
 					AutomountServiceAccountToken: boolPtr(false),
 					SecurityContext: &core.PodSecurityContext{
@@ -423,7 +434,6 @@ func (c codeHandler) createJob(jobName, configmapName string) bool {
 							},
 						},
 					},
-					RestartPolicy: "Never",
 				},
 			},
 		},
