@@ -2,10 +2,14 @@
     <head></head>
     <body>
         <h1>Code Submission: {{ .ID }}</h1>
-        <p>Status: {{ .Status }}</p>
-        <p>Language: {{ .Language }}</p>
-        <p>Code: {{ .Code }}</p>
-        <p>Logs: {{ .Logs }}</p>
+        <h2>Status:</h2>
+        <p>{{ .Status }}</p>
+        <h2>Language:</h2>
+        <p>{{ .Language }}</p>
+        <h2>Code:</h2>
+        <p>{{ .Code }}</p>
+        <h2>Logs:</h2>
+        <p>{{ .Logs }}</p>
         <a href="/list-code">Back to all submission</a>
     </body>
 </html>
