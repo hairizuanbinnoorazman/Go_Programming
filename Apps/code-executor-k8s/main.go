@@ -15,6 +15,7 @@ import (
 	"github.com/gorilla/mux"
 	batchv1 "k8s.io/api/batch/v1"
 	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -31,6 +32,10 @@ func boolPtr(a bool) *bool {
 }
 
 func int32Ptr(a int32) *int32 {
+	return &a
+}
+
+func int64Ptr(a int64) *int64 {
 	return &a
 }
 
@@ -361,15 +366,48 @@ func (c codeHandler) createJob(jobName, configmapName string) bool {
 					},
 				},
 				Spec: core.PodSpec{
+					ServiceAccountName:           "serviceacc",
+					AutomountServiceAccountToken: boolPtr(false),
+					SecurityContext: &core.PodSecurityContext{
+						SELinuxOptions: &core.SELinuxOptions{},
+						RunAsNonRoot:   boolPtr(true),
+						RunAsUser:      int64Ptr(3000),
+						RunAsGroup:     int64Ptr(3000),
+						SeccompProfile: &core.SeccompProfile{
+							Type: core.SeccompProfileTypeRuntimeDefault,
+						},
+						AppArmorProfile: &core.AppArmorProfile{
+							Type: core.AppArmorProfileTypeRuntimeDefault,
+						},
+					},
+					HostUsers: boolPtr(false),
 					Containers: []core.Container{
 						{
 							Name:  "test",
-							Image: "python:3.9-alpine",
+							Image: "new-python:v1",
 							// Image:   "nginx:latest",
 							// Command: []string{"cat", "/code/code"},
 							Command: []string{"python", "/code/code"},
 							VolumeMounts: []core.VolumeMount{
 								{Name: "miao", ReadOnly: true, MountPath: "/code"},
+							},
+							SecurityContext: &core.SecurityContext{
+								Capabilities: &core.Capabilities{
+									Drop: []core.Capability{"all"},
+								},
+								Privileged:               boolPtr(false),
+								ReadOnlyRootFilesystem:   boolPtr(true),
+								AllowPrivilegeEscalation: boolPtr(false),
+							},
+							Resources: core.ResourceRequirements{
+								Limits: core.ResourceList{
+									core.ResourceCPU:    *resource.NewMilliQuantity(500, resource.DecimalSI),
+									core.ResourceMemory: *resource.NewQuantity(1*1024*1024*1024, resource.BinarySI),
+								},
+								Requests: core.ResourceList{
+									core.ResourceCPU:    *resource.NewMilliQuantity(200, resource.DecimalSI),
+									core.ResourceMemory: *resource.NewQuantity(500*1024*1024, resource.BinarySI),
+								},
 							},
 						},
 					},
@@ -422,16 +460,17 @@ type jobLooper struct {
 }
 
 func (jl jobLooper) start() {
-	fmt.Println("start job looper")
+	executorName := "test-test"
+	fmt.Printf("start job looper :: executorName: %v\n", executorName)
 	for {
 		select {
 		case msg := <-jl.cc:
 			fmt.Printf("Code Record received: %v\n", msg)
 			jl.zz.Update(msg.ID, "running", "", time.Now())
-			jl.c.deleteJob("test-test")
-			jl.c.deleteConfigmap("test-test")
-			jl.c.createCodeConfigmap("test-test", msg.Code)
-			jobStatus := jl.c.createJob("test-test", "test-test")
+			jl.c.deleteJob(executorName)
+			jl.c.deleteConfigmap(executorName)
+			jl.c.createCodeConfigmap(executorName, msg.Code)
+			jobStatus := jl.c.createJob(executorName, executorName)
 			podName, err := jl.c.getPodName("zzz=zzz")
 			if err != nil {
 				fmt.Printf("require further investigation: %v\n", err)
@@ -444,8 +483,8 @@ func (jl jobLooper) start() {
 				jl.zz.Update(msg.ID, "failed", yahoo, time.Now())
 			}
 			// Cleanup
-			jl.c.deleteJob("test-test")
-			jl.c.deleteConfigmap("test-test")
+			jl.c.deleteJob(executorName)
+			jl.c.deleteConfigmap(executorName)
 		}
 	}
 }
