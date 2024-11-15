@@ -3,15 +3,21 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	redis "github.com/redis/go-redis/v9"
 )
 
 func main() {
+	redisPort := os.Getenv("REDIS_PORT")
+	if redisPort == "" {
+		fmt.Println("REDIS_PORT environment variable not set. Will use default")
+		redisPort = "6379"
+	}
+
 	rdb := redis.NewClient(&redis.Options{
-		// Addr: "localhost:6379",
-		Addr:     "localhost:9999",
+		Addr:     fmt.Sprintf("localhost:%v", redisPort),
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
