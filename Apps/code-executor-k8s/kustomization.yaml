@@ -6,6 +6,8 @@ kind: Kustomization
 # app: hello
 images:
   - name: lol
-    newTag: v61
+    newName: asia-southeast1-docker.pkg.dev/healthy-rarity-238313/code-assess/lol
+    newTag: v102
+namespace: code-assess
 resources:
   - deployment.yaml

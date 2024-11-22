@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -51,14 +52,36 @@ func main() {
 		panic(err.Error())
 	}
 
+	// Get configuration for environment variables
+	workingNamespace := os.Getenv("WORKING_NAMESPACE")
+	if workingNamespace == "" {
+		workingNamespace = "default"
+	}
+	serviceAccountName := os.Getenv("SERVICE_ACCOUNT_NAME")
+	if serviceAccountName == "" {
+		serviceAccountName = "default"
+	}
+	pythonContainerImage := os.Getenv("PYTHON_CONTAINER_IMAGE")
+	if pythonContainerImage == "" {
+		pythonContainerImage = "new-python:v1"
+	}
+	golangContainerImage := os.Getenv("GOLANG_CONTAINER_IMAGE")
+	if golangContainerImage == "" {
+		golangContainerImage = "new-golang:v1"
+	}
+	fmt.Printf("Using the following service account variables: WORKING_NAMESPACE: %v :: SERVICE_ACCOUNT_NAME: %v\n", workingNamespace, serviceAccountName)
+
 	// creates the clientset
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		panic(err.Error())
 	}
 	cHandler := codeHandler{
-		client:           clientset,
-		workingNamespace: "default",
+		client:               clientset,
+		workingNamespace:     workingNamespace,
+		serviceAccountName:   serviceAccountName,
+		pythonContainerImage: pythonContainerImage,
+		golangContainerImage: golangContainerImage,
 	}
 	items := make(map[string]codeRecord)
 	zzz := cdb{Items: items}
@@ -252,8 +275,11 @@ func (g getCode) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 type codeHandler struct {
-	client           *kubernetes.Clientset
-	workingNamespace string
+	client               *kubernetes.Clientset
+	workingNamespace     string
+	serviceAccountName   string
+	pythonContainerImage string
+	golangContainerImage string
 }
 
 func (c codeHandler) getPodName(labelFilter string) (string, error) {
@@ -295,7 +321,14 @@ func (c codeHandler) getPodLogs(podName string) string {
 	return logs
 }
 
-func (c codeHandler) createCodeConfigmap(configmapName, code string) {
+func (c codeHandler) createCodeConfigmap(language, configmapName, code string) {
+	filename := "code"
+	if language == "python" {
+		filename = "code.py"
+	} else if language == "golang" {
+		filename = "code.go"
+	}
+
 	fmt.Println("start creating test-test config")
 	cConfig := core.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
@@ -303,7 +336,7 @@ func (c codeHandler) createCodeConfigmap(configmapName, code string) {
 		},
 		Immutable: boolPtr(true),
 		Data: map[string]string{
-			"code": code,
+			filename: code,
 		},
 	}
 	createOpts := metav1.CreateOptions{}
@@ -357,7 +390,17 @@ func (c codeHandler) deleteJob(jobName string) error {
 	return fmt.Errorf("job can still be found - need to investigate")
 }
 
-func (c codeHandler) createJob(jobName, configmapName string) bool {
+func (c codeHandler) createJob(language, jobName, configmapName string) bool {
+	image := ""
+	command := []string{}
+	if language == "python" {
+		image = c.pythonContainerImage
+		command = []string{"python", "/code/code.py"}
+	} else if language == "golang" {
+		image = c.golangContainerImage
+		command = []string{"go", "run", "/code/code.go"}
+	}
+
 	fmt.Println("start creating create job test-test")
 	jConfig := batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
@@ -377,7 +420,7 @@ func (c codeHandler) createJob(jobName, configmapName string) bool {
 				Spec: core.PodSpec{
 					ActiveDeadlineSeconds:        int64Ptr(30),
 					RestartPolicy:                core.RestartPolicyNever,
-					ServiceAccountName:           "serviceacc",
+					ServiceAccountName:           c.serviceAccountName,
 					AutomountServiceAccountToken: boolPtr(false),
 					SecurityContext: &core.PodSecurityContext{
 						SELinuxOptions: &core.SELinuxOptions{},
@@ -395,12 +438,13 @@ func (c codeHandler) createJob(jobName, configmapName string) bool {
 					Containers: []core.Container{
 						{
 							Name:  "test",
-							Image: "new-python:v1",
+							Image: image,
 							// Image:   "nginx:latest",
 							// Command: []string{"cat", "/code/code"},
-							Command: []string{"python", "/code/code"},
+							Command: command,
 							VolumeMounts: []core.VolumeMount{
 								{Name: "miao", ReadOnly: true, MountPath: "/code"},
+								{Name: "temp", MountPath: "/tmp"},
 							},
 							SecurityContext: &core.SecurityContext{
 								Capabilities: &core.Capabilities{
@@ -430,6 +474,14 @@ func (c codeHandler) createJob(jobName, configmapName string) bool {
 									LocalObjectReference: core.LocalObjectReference{
 										Name: configmapName,
 									},
+								},
+							},
+						},
+						{
+							Name: "temp",
+							VolumeSource: core.VolumeSource{
+								EmptyDir: &core.EmptyDirVolumeSource{
+									SizeLimit: resource.NewQuantity(50*1024, resource.BinarySI),
 								},
 							},
 						},
@@ -479,8 +531,8 @@ func (jl jobLooper) start() {
 			jl.zz.Update(msg.ID, "running", "", time.Now())
 			jl.c.deleteJob(executorName)
 			jl.c.deleteConfigmap(executorName)
-			jl.c.createCodeConfigmap(executorName, msg.Code)
-			jobStatus := jl.c.createJob(executorName, executorName)
+			jl.c.createCodeConfigmap(msg.Language, executorName, msg.Code)
+			jobStatus := jl.c.createJob(msg.Language, executorName, executorName)
 			podName, err := jl.c.getPodName("zzz=zzz")
 			if err != nil {
 				fmt.Printf("require further investigation: %v\n", err)

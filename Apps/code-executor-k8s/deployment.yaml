@@ -1,3 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: default
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -23,10 +28,20 @@ spec:
       containers:
       - command:
         - /opt/app
-        image: lol:v4
-        imagePullPolicy: Never
+        image: lol:v1
+        imagePullPolicy: IfNotPresent
+        # imagePullPolicy: Never
         name: lol
         resources: {}
+        env:
+          - name: WORKING_NAMESPACE
+            value: code-assess
+          - name: SERVICE_ACCOUNT_NAME
+            value: empty-svcacct
+          - name: PYTHON_CONTAINER_IMAGE
+            value: asia-southeast1-docker.pkg.dev/healthy-rarity-238313/code-assess/new-python:v1
+          - name: GOLANG_CONTAINER_IMAGE
+            value: asia-southeast1-docker.pkg.dev/healthy-rarity-238313/code-assess/new-golang:v1
       securityContext: {}
       terminationGracePeriodSeconds: 30
 ---
@@ -82,4 +97,10 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: serviceacc
+  namespace: default
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: empty-svcacct
   namespace: default
