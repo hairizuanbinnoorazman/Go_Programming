@@ -23,5 +23,9 @@ upload-remote:
 upload-remote-executors:
 	docker build -t $(registry)new-python:$(assessver) -f python.Dockerfile .
 	docker build -t $(registry)new-golang:$(assessver) -f golang.Dockerfile .
+	docker build -t $(registry)new-node:$(assessver) -f javascript.Dockerfile .
+	docker build -t $(registry)new-ruby:$(assessver) -f ruby.Dockerfile .
 	docker push $(registry)new-golang:$(assessver)
 	docker push $(registry)new-python:$(assessver)
+	docker push $(registry)new-node:$(assessver)
+	docker push $(registry)new-ruby:$(assessver)
