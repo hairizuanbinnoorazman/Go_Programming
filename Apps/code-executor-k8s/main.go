@@ -69,6 +69,14 @@ func main() {
 	if golangContainerImage == "" {
 		golangContainerImage = "new-golang:v1"
 	}
+	jsContainerImage := os.Getenv("JAVASCRIPT_CONTAINER_IMAGE")
+	if jsContainerImage == "" {
+		jsContainerImage = "new-node:v1"
+	}
+	rubyContainerImage := os.Getenv("RUBY_CONTAINER_IMAGE")
+	if rubyContainerImage == "" {
+		rubyContainerImage = "new-ruby:v1"
+	}
 	fmt.Printf("Using the following service account variables: WORKING_NAMESPACE: %v :: SERVICE_ACCOUNT_NAME: %v\n", workingNamespace, serviceAccountName)
 
 	// creates the clientset
@@ -77,11 +85,13 @@ func main() {
 		panic(err.Error())
 	}
 	cHandler := codeHandler{
-		client:               clientset,
-		workingNamespace:     workingNamespace,
-		serviceAccountName:   serviceAccountName,
-		pythonContainerImage: pythonContainerImage,
-		golangContainerImage: golangContainerImage,
+		client:                   clientset,
+		workingNamespace:         workingNamespace,
+		serviceAccountName:       serviceAccountName,
+		pythonContainerImage:     pythonContainerImage,
+		golangContainerImage:     golangContainerImage,
+		javascriptContainerImage: jsContainerImage,
+		rubyContainerImage:       rubyContainerImage,
 	}
 	items := make(map[string]codeRecord)
 	zzz := cdb{Items: items}
@@ -275,11 +285,13 @@ func (g getCode) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 type codeHandler struct {
-	client               *kubernetes.Clientset
-	workingNamespace     string
-	serviceAccountName   string
-	pythonContainerImage string
-	golangContainerImage string
+	client                   *kubernetes.Clientset
+	workingNamespace         string
+	serviceAccountName       string
+	pythonContainerImage     string
+	golangContainerImage     string
+	javascriptContainerImage string
+	rubyContainerImage       string
 }
 
 func (c codeHandler) getPodName(labelFilter string) (string, error) {
@@ -327,6 +339,10 @@ func (c codeHandler) createCodeConfigmap(language, configmapName, code string) {
 		filename = "code.py"
 	} else if language == "golang" {
 		filename = "code.go"
+	} else if language == "javascript" {
+		filename = "code.js"
+	} else if language == "ruby" {
+		filename = "code.rb"
 	}
 
 	fmt.Println("start creating test-test config")
@@ -399,6 +415,12 @@ func (c codeHandler) createJob(language, jobName, configmapName string) bool {
 	} else if language == "golang" {
 		image = c.golangContainerImage
 		command = []string{"go", "run", "/code/code.go"}
+	} else if language == "javascript" {
+		image = c.javascriptContainerImage
+		command = []string{"node", "/code/code.js"}
+	} else if language == "ruby" {
+		image = c.rubyContainerImage
+		command = []string{"ruby", "/code/code.rb"}
 	}
 
 	fmt.Println("start creating create job test-test")
