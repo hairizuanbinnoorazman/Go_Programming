@@ -32,7 +32,13 @@ spec:
         imagePullPolicy: IfNotPresent
         # imagePullPolicy: Never
         name: lol
-        resources: {}
+        resources:
+          requests:
+            memory: "250Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
         env:
           - name: WORKING_NAMESPACE
             value: code-assess
@@ -42,6 +48,10 @@ spec:
             value: asia-southeast1-docker.pkg.dev/healthy-rarity-238313/code-assess/new-python:v1
           - name: GOLANG_CONTAINER_IMAGE
             value: asia-southeast1-docker.pkg.dev/healthy-rarity-238313/code-assess/new-golang:v1
+          - name: JAVASCRIPT_CONTAINER_IMAGE
+            value: asia-southeast1-docker.pkg.dev/healthy-rarity-238313/code-assess/new-node:v1
+          - name: RUBY_CONTAINER_IMAGE
+            value: asia-southeast1-docker.pkg.dev/healthy-rarity-238313/code-assess/new-ruby:v1
       securityContext: {}
       terminationGracePeriodSeconds: 30
 ---
@@ -104,3 +114,15 @@ kind: ServiceAccount
 metadata:
   name: empty-svcacct
   namespace: default
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+spec:
+  podSelector:
+    matchLabels:
+      zzz: zzz
+  policyTypes:
+  - Ingress
+  - Egress
