@@ -1,4 +1,3 @@
-github.com/gorilla/mux v1.8.0 h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=
-github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
+github.com/gorilla/mux v1.8.1 h1:TuBL49tXwgrFYWhqrNgrUNEY92u81SPhu7sTdzQEiWY=
 github.com/yi-jiayu/datamall v1.0.0 h1:SZ6JTtSzfjo73grYcH9WqcP/lwMTSeg54tTwC21w7XM=
 github.com/yi-jiayu/datamall v1.0.0/go.mod h1:cyGX7cDBKXpqGvcU8LTEIo+cCHsw90dqn80EW3CQoAs=
