@@ -1,4 +1,4 @@
-FROM golang:1.20 as builder
+FROM golang:1.23 as builder
 WORKDIR /googlecompute
 ADD go.mod go.sum ./
 RUN go mod download
