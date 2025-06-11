@@ -6,7 +6,9 @@ import (
 	"os"
 	"time"
 
-	compute "google.golang.org/api/compute/v1"
+	compute "cloud.google.com/go/compute/apiv1"
+	"cloud.google.com/go/compute/apiv1/computepb"
+	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
@@ -15,32 +17,36 @@ func main() {
 
 	SERVICE_ACCOUNT_FILE := os.Getenv("SERVICE_ACCOUNT_FILE")
 	GCP_PROJECT_ID := os.Getenv("GCP_PROJECT_ID")
-	REGION := os.Getenv("REGION")
 	fmt.Printf("Print GCP_PROJECT_ID: %v\n", GCP_PROJECT_ID)
 
 	ctx := context.Background()
-	var computeService *compute.Service
+	var computeService *compute.InstancesClient
 	var err error
 	if SERVICE_ACCOUNT_FILE != "" {
 		fmt.Println("create computeservice with credentials file")
-		computeService, err = compute.NewService(ctx, option.WithCredentialsFile(SERVICE_ACCOUNT_FILE))
+		computeService, err = compute.NewInstancesRESTClient(ctx, option.WithCredentialsFile(SERVICE_ACCOUNT_FILE))
 	} else {
 		fmt.Println("create computeservice with workload identity")
-		computeService, err = compute.NewService(ctx)
+		computeService, err = compute.NewInstancesRESTClient(ctx)
 	}
 	if err != nil {
 		panic("Unable to create compute service")
 	}
 	for {
-		request := computeService.Instances.List(GCP_PROJECT_ID, REGION)
-		zz, err := request.Do()
-		if err != nil {
-			fmt.Printf("Error: %s", err.Error())
+		request := computeService.List(context.TODO(), &computepb.ListInstancesRequest{
+			Project: GCP_PROJECT_ID,
+			Zone:    "asia-southeast1-a",
+		})
+		for {
+			zz, err := request.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				fmt.Printf("Error: %s", err.Error())
+			}
+			fmt.Printf("Server name: %s\n", *zz.Name)
+			time.Sleep(2 * time.Second)
 		}
-		for _, z := range zz.Items {
-			fmt.Printf("Server name: %s\n", z.Name)
-		}
-		time.Sleep(2 * time.Second)
 	}
-
 }
