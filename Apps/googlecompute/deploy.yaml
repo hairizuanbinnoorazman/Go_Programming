@@ -15,8 +15,9 @@ spec:
       labels:
         app: app
     spec:
+      serviceAccountName: default
       containers:
-      - image: gcr.io/XXX/googlecompute:v1
+      - image: asia-southeast1-docker.pkg.dev/XXX/demo/sample-google-compute:YYY
         imagePullPolicy: IfNotPresent
         name: googlecompute
         env:
@@ -33,5 +34,4 @@ spec:
             cpu: 100m
             ephemeral-storage: 1Gi
             memory: 500Mi
-      dnsPolicy: ClusterFirst
       restartPolicy: Always
