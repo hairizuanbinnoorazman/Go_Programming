@@ -1,24 +1,24 @@
-version?=v0
+version?=v6
 gcpproject?=$(shell gcloud config get project)
 clustername?=compute-demo
 
 docker-build:
-	docker build -t gcr.io/$(gcpproject)/googlecompute:$(version) .
+	docker build -t asia-southeast1-docker.pkg.dev/$(gcpproject)/demo/sample-google-compute:$(version) .
 
 docker-push:
-	docker push gcr.io/$(gcpproject)/googlecompute:$(version)
+	docker push asia-southeast1-docker.pkg.dev/$(gcpproject)/demo/sample-google-compute:$(version)
 
 create-k8s:
-	gcloud container clusters create-auto $(clustername)
+	gcloud container clusters create-auto $(clustername) --region asia-southeast1
 
 connect-k8s:
-	gcloud container clusters get-credentials $(clustername)
+	gcloud container clusters get-credentials $(clustername) --region asia-southeast1
 
 destroy-k8s:
-	gcloud container clusters --quiet delete $(clustername)
+	gcloud container clusters --quiet delete $(clustername) --region asia-southeast1
 
 deploy:
-	echo $(shell sed "s/XXX/$(gcpproject)/g" deploy.yaml > correcteddeploy.yaml  )
+	echo $(shell sed -e "s/XXX/$(gcpproject)/g" -e "s/YYY/$(version)/g" deploy.yaml > correcteddeploy.yaml  )
 	kubectl apply -f correcteddeploy.yaml
 	rm correcteddeploy.yaml
 
@@ -26,7 +26,7 @@ create-secret:
 	kubectl create secret generic cred-file  --from-file=credfile=key.json
 
 deploy-withcred:
-	echo $(shell sed "s/XXX/$(gcpproject)/g" deploy_withcredfile.yaml > correcteddeploy.yaml  )
+	echo $(shell sed -e "s/XXX/$(gcpproject)/g" -e "s/YYY/$(version)/g" deploy_withcredfile.yaml > correcteddeploy.yaml  )
 	kubectl apply -f correcteddeploy.yaml
 	rm correcteddeploy.yaml
 
