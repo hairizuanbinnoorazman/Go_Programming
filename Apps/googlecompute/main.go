@@ -18,6 +18,11 @@ func main() {
 	SERVICE_ACCOUNT_FILE := os.Getenv("SERVICE_ACCOUNT_FILE")
 	GCP_PROJECT_ID := os.Getenv("GCP_PROJECT_ID")
 	fmt.Printf("Print GCP_PROJECT_ID: %v\n", GCP_PROJECT_ID)
+	fmt.Printf("Print SERVICE_ACCOUNT_FILE: %v\n", SERVICE_ACCOUNT_FILE)
+
+	if GCP_PROJECT_ID == "" {
+		panic("We need this value to continue operations")
+	}
 
 	ctx := context.Background()
 	var computeService *compute.InstancesClient
@@ -30,6 +35,7 @@ func main() {
 		computeService, err = compute.NewInstancesRESTClient(ctx)
 	}
 	if err != nil {
+		fmt.Println(err)
 		panic("Unable to create compute service")
 	}
 	for {
