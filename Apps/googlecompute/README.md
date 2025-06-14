@@ -40,3 +40,6 @@ kubectl annotate serviceaccount \
   default \
   iam.gke.io/gcp-service-account=sample-google-compute@XXXXXX.iam.gserviceaccount.com
 ```
+
+
+gcloud auth application-default login --no-launch-browser
