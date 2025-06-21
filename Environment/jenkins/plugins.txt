@@ -91,3 +91,4 @@ antisamy-markup-formatter
 parameterized-scheduler
 yet-another-build-visualizer
 view-job-filters
+uno-choice

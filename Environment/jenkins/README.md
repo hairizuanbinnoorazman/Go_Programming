@@ -15,3 +15,14 @@ Here are some of the useful references
   - `role_strategy` plugin required
 - https://jenkinsci.github.io/job-dsl-plugin/
   - Pretty useful page to understand how to create the initial pipeline jobs
+
+
+For active choice parameters - however, maybe for this one, need to be trusted script
+
+```groovy
+def sout = new StringBuffer(), serr = new StringBuilder()
+def proc = 'ls /'.execute()
+proc.consumeProcessOutput(sout, serr)
+proc.waitForOrKill(1000)
+return sout.tokenize()
+```
