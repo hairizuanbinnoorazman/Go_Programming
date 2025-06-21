@@ -5,32 +5,32 @@ There are 3 main pages
 2. Login page - Redirect user to server
 3. Callback page -> Get code -> Exchange for token -> Redirect
 4. Page for registered users
- */
+*/
 
 package main
 
 import (
+	"context"
+	"io"
 	"log"
 	"net/http"
-	"io"
+
 	"golang.org/x/oauth2"
 	"google.golang.org/api/analyticsreporting/v4"
-	"context"
 )
 
 var conf = &oauth2.Config{
-	ClientID: "--",
+	ClientID:     "--",
 	ClientSecret: "--",
-	Scopes: []string{"https://www.googleapis.com/auth/analytics"},
-	Endpoint: oauth2.Endpoint {
-		AuthURL: "https://accounts.google.com/o/oauth2/v2/auth",
+	Scopes:       []string{"https://www.googleapis.com/auth/analytics"},
+	Endpoint: oauth2.Endpoint{
+		AuthURL:  "https://accounts.google.com/o/oauth2/v2/auth",
 		TokenURL: "https://www.googleapis.com/oauth2/v4/token",
 	},
 	RedirectURL: "http://localhost:3000/callback",
 }
 
-
-type indexHandler struct {}
+type indexHandler struct{}
 
 func (h indexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Println("Begin index handler")
@@ -71,7 +71,7 @@ func (h callbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Println(tok.TokenType)
 
 	if err != nil {
-		log.Println( err.Error())
+		log.Println(err.Error())
 	}
 
 	// Try out client
@@ -83,13 +83,17 @@ func (h callbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	singleDateRange := &analyticsreporting.DateRange{"2017-02-28", "2017-02-01", []string{}, []string{}}
 	multiDateRange := []*analyticsreporting.DateRange{singleDateRange}
 
-	singleMetrics := &analyticsreporting.Metric{Expression:"ga:users"}
+	singleMetrics := &analyticsreporting.Metric{Expression: "ga:users"}
 	multipleMetrics := []*analyticsreporting.Metric{singleMetrics}
 
-	singleReportRequest := analyticsreporting.ReportRequest{ViewId:"--", DateRanges:multiDateRange, Metrics:multipleMetrics}
+	singleReportRequest := analyticsreporting.ReportRequest{ViewId: "--", DateRanges: multiDateRange, Metrics: multipleMetrics}
 	multipleReportRequests := []*analyticsreporting.ReportRequest{&singleReportRequest}
 
-	getReportRequest := &analyticsreporting.GetReportsRequest{multipleReportRequests,[]string{}, []string{}}
+	getReportRequest := &analyticsreporting.GetReportsRequest{
+		ReportRequests:  multipleReportRequests,
+		ForceSendFields: []string{},
+		NullFields:      []string{},
+	}
 	reportResponse, err := analyticsreportingService.Reports.BatchGet(getReportRequest).Do()
 	if err != nil {
 		log.Println(err.Error())
@@ -103,7 +107,6 @@ func (h callbackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			log.Println(raw.Values)
 		}
 	}
-
 
 	io.WriteString(w, "Testing application")
 	//http.Redirect(w, r.WithContext(Miao(ctx, tok)), "/users", 301)
@@ -140,7 +143,7 @@ func (h randomHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 type lolHandler struct{}
 
-func (h lolHandler) ServeHTTP(w http.ResponseWriter, r *http.Request){
+func (h lolHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	haha, err := ctx.Value("lol").(string)
 	if !err {
@@ -149,9 +152,8 @@ func (h lolHandler) ServeHTTP(w http.ResponseWriter, r *http.Request){
 	io.WriteString(w, haha)
 }
 
-
 func Decorator(handler http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		ctx = context.WithValue(ctx, "lol", "lol2 lol2")
 		r = r.WithContext(ctx)
@@ -166,7 +168,7 @@ func main() {
 	http.Handle("/callback", callbackHandler{})
 	http.Handle("/users", userHandler{})
 	http.Handle("/random", randomHandler{}) // This call  is to show how context propagation don't work
-	http.Handle("/lol", lolHandler{}) // If called for random, no value is passed through, a redirect is like a new request.
+	http.Handle("/lol", lolHandler{})       // If called for random, no value is passed through, a redirect is like a new request.
 	http.Handle("/decor", Decorator(lolHandler{}))
 	log.Fatal(http.ListenAndServe(":3000", nil))
 }
