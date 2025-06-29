@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"crypto/sha1"
 	"encoding/binary"
 	"encoding/hex"
@@ -12,6 +13,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"slices"
 
 	"github.com/anacrolix/torrent"
 	"github.com/anacrolix/torrent/bencode"
@@ -66,6 +68,50 @@ func getPeerList(peerID, infohash string) ([]string, error) {
 	return peers, nil
 }
 
+type TorrentFile struct {
+	Filename    string
+	PieceCheck  []bool
+	PieceLength int
+	Pieces      [][]byte
+	Length      int
+}
+
+func NewTorrentFile(filename string, length, pieceLength int, pieces []byte) TorrentFile {
+	idx := 0
+	splittedPieces := [][]byte{}
+	for idx < len(pieces) {
+		splittedPieces = append(splittedPieces, pieces[idx:(idx+20)])
+		idx += 20
+	}
+	return TorrentFile{
+		Filename:    filename,
+		PieceLength: pieceLength,
+		Length:      length,
+		Pieces:      splittedPieces,
+		PieceCheck:  slices.Repeat[[]bool, bool]([]bool{false}, len(splittedPieces)),
+	}
+}
+
+func (tf *TorrentFile) ExecuteFileCheck() {
+	for idx, _ := range tf.Pieces {
+		tf.ExecutePieceCheck(idx)
+	}
+}
+
+func (tf *TorrentFile) ExecutePieceCheck(idx int) bool {
+	ff, _ := os.Open(tf.Filename)
+	defer ff.Close()
+
+	rawPieceContent := make([]byte, tf.PieceLength)
+	ff.ReadAt(rawPieceContent, int64(idx*tf.PieceLength))
+	ss2 := sha1.New()
+	ss2.Write(rawPieceContent)
+	oo2 := ss2.Sum(nil)
+	contentCheck := bytes.Equal(oo2, tf.Pieces[idx])
+	tf.PieceCheck[idx] = contentCheck
+	return contentCheck
+}
+
 func main() {
 	yahoo, _ := os.ReadFile("zzz.torrent")
 	type aaa struct {
@@ -86,28 +132,16 @@ func main() {
 	var zz zzz
 	bencode.Unmarshal(yahoo, &zz)
 
-	fmt.Printf("%+v\n", zz)
+	// fmt.Printf("%+v\n", zz)
 
 	val, _ := bencode.Marshal(zz.Info)
 	ss := sha1.New()
 	ss.Write(val)
 	oo := ss.Sum(nil)
 	fmt.Printf("%x\n", oo)
-	fmt.Printf("%d\n", len(zz.Info.Pieces))
-	fmt.Printf("%v\n", zz.Info.Pieces[0:20])
 
-	ff, _ := os.Open("hoho.mkv")
-	az := make([]byte, 1048576)
-	az2, _ := os.ReadFile("hoho.mkv")
-	fmt.Println(len(az2))
-	fmt.Println(len(az))
-	ppp, _ := ff.ReadAt(az, 0)
-	fmt.Println(ppp)
-	ss2 := sha1.New()
-	ss2.Write(az)
-	oo2 := ss2.Sum(nil)
-	fmt.Printf("%x - %x\n", az[0:5], az[:5])
-	fmt.Printf("From the file%v -: %v\n", len(az), oo2)
+	tf := NewTorrentFile("hoho.mkv", zz.Info.Length, zz.Info.PieceLength, zz.Info.Pieces)
+	fmt.Println(tf.ExecutePieceCheck(0))
 
 	// pp, _ := hex.DecodeString("d69f91e6b2ae4c542468d1073a71d4ea13879a7f")
 	// peerID := "11111111111111111111"
