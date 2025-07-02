@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"math"
 	"net"
 	"net/http"
@@ -143,6 +144,26 @@ func main() {
 	tf := NewTorrentFile("hoho.mkv", zz.Info.Length, zz.Info.PieceLength, zz.Info.Pieces)
 	fmt.Println(tf.ExecutePieceCheck(0))
 
+	tcpListener, _ := os.LookupEnv("BT_PORT")
+	httpListener, _ := os.LookupEnv("HTTP_PORT")
+	peerURL, _ := os.LookupEnv("PEER_URL")
+
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%v", tcpListener))
+	if err != nil {
+		panic("Unable to listen to port")
+	}
+	defer listener.Close()
+
+	go handler(listener)
+
+	hoho := TorrentMessage{}
+	zpa := hoho.allConvertBitField(tf.PieceCheck)
+	fmt.Printf("%v\n", zpa)
+
+	http.Handle("/foo", fooHandler{PeerURL: peerURL})
+
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", httpListener), nil))
+
 	// pp, _ := hex.DecodeString("d69f91e6b2ae4c542468d1073a71d4ea13879a7f")
 	// peerID := "11111111111111111111"
 
@@ -162,6 +183,52 @@ func main() {
 	// yy.handshake(pp2.Interested())
 	// yy.handshake(pp2.Request())
 	// fmt.Printf("%x", zz.Info.Pieces[0:20])
+}
+
+type fooHandler struct {
+	PeerURL string
+}
+
+func (f fooHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	slog.Info("start foo handler")
+	defer slog.Info("end foo handler")
+
+	conn, err := net.Dial("tcp", f.PeerURL)
+	if err != nil {
+		fmt.Println("Error connecting:", err)
+		return
+	}
+	defer conn.Close()
+
+	conn.Write([]byte("Testing this crappy thing"))
+	conn.Write([]byte(io.EOF.Error()))
+	tmp := make([]byte, 1024)
+	conn.Read(tmp)
+	fmt.Println(string(tmp))
+}
+
+func handler(listener net.Listener) {
+	slog.Info("Start listener function")
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			// Handle error (e.g., connection closed)
+			continue
+		}
+		go handleConnection(conn) // Handle connection in a new goroutine
+	}
+}
+
+func handleConnection(conn net.Conn) {
+	slog.Info("Handling connection")
+	// make a temporary bytes var to read from the connection
+	tmp := make([]byte, 1024)
+	// make 0 length data bytes (since we'll be appending)
+	conn.Read(tmp)
+	slog.Info(string(tmp))
+
+	// loop through the connection stream, appending tmp to data
+	conn.Write([]byte("testing"))
 }
 
 func mainzz() {
@@ -218,6 +285,14 @@ func (t TorrentMessage) convertToBytes(num int) []byte {
 	return bBigEndian
 }
 
+func (t TorrentMessage) allReverseBitField(bb []byte) []bool {
+	rawBools := []bool{}
+	for _, v := range bb {
+		rawBools = t.reverseBitfield(v)
+	}
+	return rawBools
+}
+
 func (t TorrentMessage) reverseBitfield(b byte) []bool {
 	aa := []bool{}
 	rawVal := int(b)
@@ -233,6 +308,22 @@ func (t TorrentMessage) reverseBitfield(b byte) []bool {
 		idx -= 1
 	}
 	return aa
+}
+
+func (t TorrentMessage) allConvertBitField(items []bool) []byte {
+	idx := 0
+	raw := []byte{}
+	for idx < len(items) {
+		var singleBitfield byte
+		if idx+8 > len(items) {
+			singleBitfield = t.convertBitfield(items[idx:])
+		} else {
+			singleBitfield = t.convertBitfield(items[idx:(idx + 8)])
+		}
+		idx += 8
+		raw = append(raw, singleBitfield)
+	}
+	return raw
 }
 
 func (t TorrentMessage) convertBitfield(items []bool) byte {
