@@ -10,11 +10,13 @@ import (
 	"log"
 	"log/slog"
 	"math"
+	"math/rand"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"slices"
+	"time"
 
 	"github.com/anacrolix/torrent"
 	"github.com/anacrolix/torrent/bencode"
@@ -113,40 +115,38 @@ func (tf *TorrentFile) ExecutePieceCheck(idx int) bool {
 	return contentCheck
 }
 
-func main() {
-	yahoo, _ := os.ReadFile("zzz.torrent")
-	type aaa struct {
-		Length      int    `bencode:"length"`
-		Name        string `bencode:"name"`
-		PieceLength int    `bencode:"piece length"`
-		Pieces      []byte `bencode:"pieces"`
-	}
-	type zzz struct {
-		Announce     string     `bencode:"announce,omitempty"`
-		AnnounceList [][]string `bencode:"announce-list"`
-		Comment      string     `bencode:"comment"`
-		CreatedBy    string     `bencode:"created by"`
-		CreationDate int        `bencode:"creation date"`
-		Encoding     string     `bencode:"encoding"`
-		Info         aaa        `bencode:"info"`
-	}
-	var zz zzz
-	bencode.Unmarshal(yahoo, &zz)
+func (tf *TorrentFile) GetContent(idx, offset, blockLength int) []byte {
+	ff, _ := os.Open(tf.Filename)
+	defer ff.Close()
 
-	// fmt.Printf("%+v\n", zz)
+	rawBlockContent := make([]byte, blockLength)
+	ff.ReadAt(rawBlockContent, int64(idx*tf.PieceLength+offset))
+	return rawBlockContent
+}
 
-	val, _ := bencode.Marshal(zz.Info)
+func generatePeerID() []byte {
+	initialVal := rand.Int31()
 	ss := sha1.New()
-	ss.Write(val)
-	oo := ss.Sum(nil)
-	fmt.Printf("%x\n", oo)
+	rawInitialVal := make([]byte, 4)
+	binary.BigEndian.PutUint32(rawInitialVal, uint32(initialVal))
+	ss.Write(rawInitialVal)
+	peerID := ss.Sum(nil)
+	return peerID
+}
 
-	tf := NewTorrentFile("hoho.mkv", zz.Info.Length, zz.Info.PieceLength, zz.Info.Pieces)
-	fmt.Println(tf.ExecutePieceCheck(0))
-
+func main() {
 	tcpListener, _ := os.LookupEnv("BT_PORT")
 	httpListener, _ := os.LookupEnv("HTTP_PORT")
 	peerURL, _ := os.LookupEnv("PEER_URL")
+
+	peerID := generatePeerID()
+	slog.Info(fmt.Sprintf("PeerID: %x", peerID))
+
+	pp, _ := hex.DecodeString("d69f91e6b2ae4c542468d1073a71d4ea13879a7f")
+	tm := TorrentMessage{
+		peerID:   peerID,
+		infohash: pp,
+	}
 
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%v", tcpListener))
 	if err != nil {
@@ -154,13 +154,10 @@ func main() {
 	}
 	defer listener.Close()
 
-	go handler(listener)
+	go handler(listener, tm)
 
-	hoho := TorrentMessage{}
-	zpa := hoho.allConvertBitField(tf.PieceCheck)
-	fmt.Printf("%v\n", zpa)
-
-	http.Handle("/foo", fooHandler{PeerURL: peerURL})
+	// http.Handle("add-torrent", startHandler{})
+	http.Handle("/start", startHandler{PeerURL: peerURL, TM: tm})
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", httpListener), nil))
 
@@ -185,14 +182,19 @@ func main() {
 	// fmt.Printf("%x", zz.Info.Pieces[0:20])
 }
 
-type fooHandler struct {
+type startHandler struct {
 	PeerURL string
+	TM      TorrentMessage
 }
 
-func (f fooHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (f startHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	slog.Info("start foo handler")
 	defer slog.Info("end foo handler")
 
+	go f.BeginTorrent()
+}
+
+func (f startHandler) BeginTorrent() {
 	conn, err := net.Dial("tcp", f.PeerURL)
 	if err != nil {
 		fmt.Println("Error connecting:", err)
@@ -200,14 +202,128 @@ func (f fooHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	conn.Write([]byte("Testing this crappy thing"))
-	conn.Write([]byte(io.EOF.Error()))
-	tmp := make([]byte, 1024)
+	conn.Write(f.TM.Handshake())
+	// Skip the "handshake section"
+	// First 20 bytes is protocol info
+	// Next 8 bytes is extension
+	// Next 20 bytes is infohash
+	// Next 20 bytes is peerid
+	// Next 4 bytes Length of message
+	// Next 1 byte is message id
+	tmp := make([]byte, 28)
 	conn.Read(tmp)
-	fmt.Println(string(tmp))
+
+	rawInfohash := make([]byte, 20)
+	conn.Read(rawInfohash)
+	fmt.Printf("Infohash: %x\n", rawInfohash)
+
+	rawPeerID := make([]byte, 20)
+	conn.Read(rawPeerID)
+	fmt.Printf("Peer ID: %x\n", rawPeerID)
+
+	pieceID := 0
+	blockOffset := 0
+
+	for {
+		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+
+		rawMessageLength := make([]byte, 4)
+		_, err := conn.Read(rawMessageLength)
+		if err != nil {
+			fmt.Println("connection probably failed. let's retry again next time")
+			return
+		}
+		messageLength := int(binary.BigEndian.Uint32(rawMessageLength))
+		fmt.Printf("%d - %x\n", messageLength, rawMessageLength)
+
+		rawMessageType := make([]byte, 1)
+		_, err = conn.Read(rawMessageType)
+		if err != nil {
+			fmt.Println("connection probably failed. let's retry again next time")
+			return
+		}
+		messageType := int(rawMessageType[0])
+
+		switch messageType {
+		case 5:
+			fmt.Println("Bitfield type")
+			bitfieldMessage := make([]byte, messageLength-1)
+			conn.Read(bitfieldMessage)
+			fmt.Printf("Bitfield: %x\n", bitfieldMessage)
+		case 7:
+			fmt.Println("Piece type")
+
+			rawPieceIndex := make([]byte, 4)
+			conn.Read(rawPieceIndex)
+			pieceIndex := int(binary.BigEndian.Uint32(rawPieceIndex))
+
+			rawOffset := make([]byte, 4)
+			conn.Read(rawOffset)
+			offset := int(binary.BigEndian.Uint32(rawOffset))
+
+			fmt.Printf("PieceIndex: %v :: Offset: %v\n", pieceIndex, offset)
+
+			rawContent := make([]byte, messageLength-1-4-4)
+			aa, _ := conn.Read(rawContent)
+			fmt.Printf("Obtained %v bytes from other peer", aa)
+		default:
+			fmt.Println("message type undertermined")
+			time.Sleep(10 * time.Second)
+			continue
+		}
+
+		conn.Write(f.TM.Request(pieceID, blockOffset))
+		blockOffset += 16384
+		if blockOffset == 1048576 {
+			pieceID += 1
+			blockOffset = 0
+		}
+	}
 }
 
-func handler(listener net.Listener) {
+type aaa struct {
+	Length      int    `bencode:"length"`
+	Name        string `bencode:"name"`
+	PieceLength int    `bencode:"piece length"`
+	Pieces      []byte `bencode:"pieces"`
+}
+type zzz struct {
+	Announce     string     `bencode:"announce,omitempty"`
+	AnnounceList [][]string `bencode:"announce-list"`
+	Comment      string     `bencode:"comment"`
+	CreatedBy    string     `bencode:"created by"`
+	CreationDate int        `bencode:"creation date"`
+	Encoding     string     `bencode:"encoding"`
+	Info         aaa        `bencode:"info"`
+}
+
+type addTorrentHandler struct{}
+
+func (f addTorrentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	slog.Info("add torrent handler")
+	defer slog.Info("end torrent handler")
+
+	yahoo, _ := os.ReadFile("zzz.torrent")
+
+	var zz zzz
+	bencode.Unmarshal(yahoo, &zz)
+
+	val, _ := bencode.Marshal(zz.Info)
+	ss := sha1.New()
+	ss.Write(val)
+	oo := ss.Sum(nil)
+	fmt.Printf("%x\n", oo)
+
+	tf := NewTorrentFile("hoho.mkv", zz.Info.Length, zz.Info.PieceLength, zz.Info.Pieces)
+	fmt.Println(tf.ExecutePieceCheck(0))
+
+	hoho := TorrentMessage{}
+	zpa := hoho.allConvertBitField(tf.PieceCheck)
+	fmt.Printf("%v\n", zpa)
+
+}
+
+func handler(listener net.Listener, tm TorrentMessage) {
 	slog.Info("Start listener function")
 	for {
 		conn, err := listener.Accept()
@@ -215,20 +331,84 @@ func handler(listener net.Listener) {
 			// Handle error (e.g., connection closed)
 			continue
 		}
-		go handleConnection(conn) // Handle connection in a new goroutine
+		go handleConnection(conn, tm) // Handle connection in a new goroutine
 	}
 }
 
-func handleConnection(conn net.Conn) {
-	slog.Info("Handling connection")
-	// make a temporary bytes var to read from the connection
-	tmp := make([]byte, 1024)
-	// make 0 length data bytes (since we'll be appending)
-	conn.Read(tmp)
-	slog.Info(string(tmp))
+func handleConnection(conn net.Conn, tm TorrentMessage) {
+	slog.Info("Wait for the handshake first. We are receiver section of the codebase")
 
-	// loop through the connection stream, appending tmp to data
-	conn.Write([]byte("testing"))
+	// Skip the "handshake section"
+	// First 20 bytes is protocol info
+	// Next 8 bytes is extension
+	// Next 20 bytes is infohash
+	// Next 20 bytes is peerid
+	tmp := make([]byte, 28)
+	conn.Read(tmp)
+	fmt.Println(string(tmp))
+
+	rawInfohash := make([]byte, 20)
+	conn.Read(rawInfohash)
+	fmt.Printf("Infohash: %x\n", rawInfohash)
+
+	rawPeerID := make([]byte, 20)
+	conn.Read(rawPeerID)
+	fmt.Printf("PeerID: %x\n", rawPeerID)
+
+	yahoo, _ := os.ReadFile("zzz.torrent")
+	var zz zzz
+	bencode.Unmarshal(yahoo, &zz)
+	tf := NewTorrentFile("hoho.mkv", zz.Info.Length, zz.Info.PieceLength, zz.Info.Pieces)
+
+	// Immediately return handshake
+	prefix := tm.Handshake()
+	bitfield := tm.Bitfield([]byte{255, 255, 255})
+	fullMessage := append(prefix, bitfield...)
+	conn.Write(fullMessage)
+
+	for {
+		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+
+		rawMessageLength := make([]byte, 4)
+		_, err := conn.Read(rawMessageLength)
+		if err != nil {
+			fmt.Println("connection probably failed. let's retry again next time")
+			return
+		}
+		messageLength := int(binary.BigEndian.Uint32(rawMessageLength))
+		fmt.Printf("Message Length: %d\n", messageLength)
+
+		rawMessageType := make([]byte, 1)
+		_, err = conn.Read(rawMessageType)
+		if err != nil {
+			fmt.Println("connection probably failed. let's retry again next time")
+			return
+		}
+		messageType := int(rawMessageType[0])
+
+		switch messageType {
+		case 6:
+			fmt.Println("Request type")
+
+			rawPieceIndex := make([]byte, 4)
+			conn.Read(rawPieceIndex)
+			pieceIndex := int(binary.BigEndian.Uint32(rawPieceIndex))
+
+			rawOffset := make([]byte, 4)
+			conn.Read(rawOffset)
+			offset := int(binary.BigEndian.Uint32(rawOffset))
+
+			rawLength := make([]byte, 4)
+			conn.Read(rawLength)
+			contentLength := int(binary.BigEndian.Uint32(rawLength))
+
+			fmt.Printf("PieceIndex: %v :: Offset: %v :: ContentLength: %v\n", pieceIndex, offset, contentLength)
+			output := tf.GetContent(pieceIndex, offset, contentLength)
+
+			response := tm.Piece(pieceIndex, offset, output)
+			conn.Write(response)
+		}
+	}
 }
 
 func mainzz() {
@@ -388,15 +568,37 @@ func (t TorrentMessage) Have(index int) []byte {
 	return output
 }
 
+func (t TorrentMessage) Bitfield(bitfieldContent []byte) []byte {
+	messageType := []byte{5}
+	message := append(messageType, bitfieldContent...)
+	messageLength := t.convertToBytes(len(message))
+	output := append(messageLength, message...)
+	return output
+}
+
 func (t TorrentMessage) Request(indexPiece, blockOffset int) []byte {
 	message := []byte{6}
-	rawIndexPiece := t.convertToBytes(0)
-	rawBlockOffset := t.convertToBytes(0)
+	rawIndexPiece := t.convertToBytes(indexPiece)
+	rawBlockOffset := t.convertToBytes(blockOffset)
 	// TODO: For last piece, last block, it will be different
 	blockLength := t.convertToBytes(16384)
 	message = append(message, rawIndexPiece...)
 	message = append(message, rawBlockOffset...)
 	message = append(message, blockLength...)
+
+	messageLength := t.convertToBytes(len(message))
+	output := append(messageLength, message...)
+	return output
+}
+
+func (t TorrentMessage) Piece(indexPiece, blockOffset int, content []byte) []byte {
+	message := []byte{7}
+	rawIndexPiece := t.convertToBytes(indexPiece)
+	rawBlockOffset := t.convertToBytes(blockOffset)
+	// TODO: For last piece, last block, it will be different
+	message = append(message, rawIndexPiece...)
+	message = append(message, rawBlockOffset...)
+	message = append(message, content...)
 
 	messageLength := t.convertToBytes(len(message))
 	output := append(messageLength, message...)
