@@ -3,3 +3,6 @@ peer1:
 
 peer2:
 	BT_PORT=6183 HTTP_PORT=8082 PEER_URL=localhost:6181 go run main.go
+
+addtorrent:
+	curl http://localhost:8080/add-torrent
