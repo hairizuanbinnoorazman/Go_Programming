@@ -395,6 +395,8 @@ func (f startHandler) BeginTorrent() {
 	ss.Write(val)
 	infohash := ss.Sum(nil)
 
+	f.TM.infohash = infohash
+
 	conn.Write(f.TM.Handshake())
 	// Skip the "handshake section"
 	// First 20 bytes is protocol info
@@ -580,6 +582,13 @@ func handleConnection(conn net.Conn, tm TorrentMessage, tps TorrentProgresState,
 	// TODO: Allow modify with Folder path
 	tf := NewTorrentFile("hoho.mkv", zz.Info.Length, zz.Info.PieceLength, zz.Info.Pieces)
 
+	val, _ := bencode.Marshal(zz.Info)
+	ss := sha1.New()
+	ss.Write(val)
+	infohash := ss.Sum(nil)
+
+	tm.infohash = infohash
+
 	// Immediately return handshake
 	prefix := tm.Handshake()
 	state := tps.ViewPeerState(rawInfohash, currentPeerID)
@@ -588,7 +597,8 @@ func handleConnection(conn net.Conn, tm TorrentMessage, tps TorrentProgresState,
 	conn.Write(fullMessage)
 
 	for {
-		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		conn.SetReadDeadline(time.Now().Add(120 * time.Second))
+		time.Sleep(5 * time.Second)
 
 		rawMessageLength := make([]byte, 4)
 		_, err := conn.Read(rawMessageLength)
