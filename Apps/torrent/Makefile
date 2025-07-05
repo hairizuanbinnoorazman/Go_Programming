@@ -12,3 +12,5 @@ addtorrent2:
 
 starttorrent2:
 	curl http://localhost:8082/start
+
+allstart: addtorrent addtorrent2 starttorrent2
