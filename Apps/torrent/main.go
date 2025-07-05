@@ -17,6 +17,7 @@ import (
 	"net/url"
 	"os"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/anacrolix/torrent"
@@ -249,6 +250,12 @@ func (tf *TorrentFile) ExecutePieceCheck(idx int) bool {
 	defer ff.Close()
 
 	rawPieceContent := make([]byte, tf.PieceLength)
+	if (idx+1)*tf.PieceLength > tf.Length {
+		extraBytes := (idx+1)*tf.PieceLength - tf.Length
+		fmt.Printf("Extra bytes: %v\n", extraBytes)
+		rawPieceContent = make([]byte, tf.PieceLength-(extraBytes))
+	}
+
 	ff.ReadAt(rawPieceContent, int64(idx*tf.PieceLength))
 	ss2 := sha1.New()
 	ss2.Write(rawPieceContent)
@@ -281,6 +288,11 @@ func main() {
 	tcpListener, _ := os.LookupEnv("BT_PORT")
 	httpListener, _ := os.LookupEnv("HTTP_PORT")
 	peerURL, _ := os.LookupEnv("PEER_URL")
+	folderPath, _ := os.LookupEnv("FOLDER_PATH")
+
+	if !strings.HasSuffix(folderPath, "/") && folderPath != "" {
+		folderPath += "/"
+	}
 
 	opt := badger.DefaultOptions("").WithInMemory(true)
 	db, err := badger.Open(opt)
@@ -323,8 +335,8 @@ func main() {
 
 	go handler(listener, tm, aa, peerID)
 
-	http.Handle("/add-torrent", &addTorrentHandler{currentPeerID: peerID, tps: aa})
-	http.Handle("/start", startHandler{PeerURL: peerURL, TM: tm, TPS: aa})
+	http.Handle("/add-torrent", &addTorrentHandler{currentPeerID: peerID, tps: aa, folderPath: folderPath})
+	http.Handle("/start", startHandler{PeerURL: peerURL, TM: tm, TPS: aa, FolderPath: folderPath, CurrentPeerID: peerID})
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", httpListener), nil))
 
@@ -350,9 +362,11 @@ func main() {
 }
 
 type startHandler struct {
-	PeerURL string
-	TM      TorrentMessage
-	TPS     TorrentProgresState
+	PeerURL       string
+	CurrentPeerID []byte
+	TM            TorrentMessage
+	TPS           TorrentProgresState
+	FolderPath    string
 }
 
 func (f startHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -369,6 +383,17 @@ func (f startHandler) BeginTorrent() {
 		return
 	}
 	defer conn.Close()
+
+	yahoo, _ := os.ReadFile("zzz3.torrent")
+	var zz zzz
+	bencode.Unmarshal(yahoo, &zz)
+	// TODO: Allow modify with Folder path
+	tf := NewTorrentFile("hoho.mkv", zz.Info.Length, zz.Info.PieceLength, zz.Info.Pieces)
+
+	val, _ := bencode.Marshal(zz.Info)
+	ss := sha1.New()
+	ss.Write(val)
+	infohash := ss.Sum(nil)
 
 	conn.Write(f.TM.Handshake())
 	// Skip the "handshake section"
@@ -419,7 +444,7 @@ func (f startHandler) BeginTorrent() {
 			fmt.Println("Bitfield type")
 			bitfieldMessage := make([]byte, messageLength-1)
 			conn.Read(bitfieldMessage)
-			fmt.Printf("Bitfield: %x\n", bitfieldMessage)
+			f.TPS.AddPeer(rawInfohash, rawPeerID, f.TM.allReverseBitField(bitfieldMessage))
 		case 7:
 			fmt.Println("Piece type")
 
@@ -442,13 +467,22 @@ func (f startHandler) BeginTorrent() {
 			continue
 		}
 
-		conn.Write(f.TM.Request(pieceID, blockOffset))
-		blockOffset += 16384
-		if blockOffset == 1048576 {
-			pieceID += 1
-			blockOffset = 0
-			break
+		if pieceID == -1 {
+			pieceID = f.TPS.StartDownload(infohash, f.CurrentPeerID, rawPeerID)
 		}
+
+		if blockOffset == tf.PieceLength {
+			pieceID += f.TPS.StartDownload(infohash, f.CurrentPeerID, rawPeerID)
+			blockOffset = 0
+		}
+
+		blockLength := 16384
+		if pieceID*tf.PieceLength+blockOffset+blockLength > tf.Length {
+			blockLength = blockLength - (tf.Length - pieceID*tf.PieceLength + blockOffset + blockLength)
+		}
+
+		conn.Write(f.TM.Request(pieceID, blockOffset, blockLength))
+		blockOffset += 16384
 	}
 }
 
@@ -471,6 +505,7 @@ type zzz struct {
 type addTorrentHandler struct {
 	currentPeerID []byte
 	tps           TorrentProgresState
+	folderPath    string
 }
 
 func (f *addTorrentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -488,7 +523,20 @@ func (f *addTorrentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ss.Write(val)
 	infohash := ss.Sum(nil)
 
-	tf := NewTorrentFile(zz.Info.Name, zz.Info.Length, zz.Info.PieceLength, zz.Info.Pieces)
+	filePath := f.folderPath + zz.Info.Name
+
+	_, err := os.Stat(filePath)
+	if os.IsNotExist(err) {
+		aa, err := os.Create(filePath)
+		if err != nil {
+			fmt.Println(err)
+		}
+		emptyContent := make([]byte, zz.Info.Length)
+		aa.Write(emptyContent)
+		aa.Sync()
+	}
+
+	tf := NewTorrentFile(filePath, zz.Info.Length, zz.Info.PieceLength, zz.Info.Pieces)
 	vals := tf.ExecuteFileCheck()
 	f.tps.AddPeer(infohash, f.currentPeerID, vals)
 	fmt.Printf("Torrent Added. Infohash: %x. Pieces detected: %v\n", infohash, len(vals))
@@ -529,6 +577,7 @@ func handleConnection(conn net.Conn, tm TorrentMessage, tps TorrentProgresState,
 	yahoo, _ := os.ReadFile("zzz3.torrent")
 	var zz zzz
 	bencode.Unmarshal(yahoo, &zz)
+	// TODO: Allow modify with Folder path
 	tf := NewTorrentFile("hoho.mkv", zz.Info.Length, zz.Info.PieceLength, zz.Info.Pieces)
 
 	// Immediately return handshake
@@ -588,8 +637,8 @@ func mainzz() {
 	tt := NewTorrentMessage(pp)
 	fmt.Printf("%v", tt)
 
-	zz := tt.Request(0, 0)
-	fmt.Println(hex.EncodeToString(zz))
+	// zz := tt.Request(0, 0)
+	// fmt.Println(hex.EncodeToString(zz))
 
 }
 
@@ -748,12 +797,13 @@ func (t TorrentMessage) Bitfield(bitfieldContent []byte) []byte {
 	return output
 }
 
-func (t TorrentMessage) Request(indexPiece, blockOffset int) []byte {
+func (t TorrentMessage) Request(indexPiece, blockOffset, rawBlockLength int) []byte {
 	message := []byte{6}
 	rawIndexPiece := t.convertToBytes(indexPiece)
 	rawBlockOffset := t.convertToBytes(blockOffset)
 	// TODO: For last piece, last block, it will be different
-	blockLength := t.convertToBytes(16384)
+	// blockLength := t.convertToBytes(16384)
+	blockLength := t.convertToBytes(rawBlockLength)
 	message = append(message, rawIndexPiece...)
 	message = append(message, rawBlockOffset...)
 	message = append(message, blockLength...)
