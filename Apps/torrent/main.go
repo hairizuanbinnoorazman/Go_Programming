@@ -5,6 +5,7 @@ import (
 	"crypto/sha1"
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -20,6 +21,7 @@ import (
 
 	"github.com/anacrolix/torrent"
 	"github.com/anacrolix/torrent/bencode"
+	badger "github.com/dgraph-io/badger/v4"
 )
 
 // This function serves
@@ -71,6 +73,140 @@ func getPeerList(peerID, infohash string) ([]string, error) {
 	return peers, nil
 }
 
+type SingleTorrentState struct {
+	Blocks           []bool `json:"blocks"`
+	DownloadingBlock int    `json:"downloading_block" `
+}
+
+func (s *SingleTorrentState) fromBytes(val []byte) {
+	var sts SingleTorrentState
+	json.Unmarshal(val, &sts)
+	s.Blocks = sts.Blocks
+	s.DownloadingBlock = sts.DownloadingBlock
+}
+
+func (s *SingleTorrentState) toBytes() []byte {
+	val, _ := json.Marshal(s)
+	return val
+}
+
+func nextBlock(currentBlocks, otherPeerBlocks []bool) (nextBlock int, completed bool) {
+	// Convert currentBlocks with false to int slice
+	allFalseCurrentBlock := []int{}
+	for k, v := range currentBlocks {
+		if v == false {
+			allFalseCurrentBlock = append(allFalseCurrentBlock, k)
+		}
+	}
+	if len(allFalseCurrentBlock) == 0 {
+		return -1, true
+	}
+	// Convert otherPeerBlocks with true to int slice
+	allTrueOtherPeerBlock := []int{}
+	for k, v := range otherPeerBlocks {
+		if v {
+			allTrueOtherPeerBlock = append(allTrueOtherPeerBlock, k)
+		}
+	}
+	// See matching int slice values
+	possibleBlocks := []int{}
+	for _, v := range allFalseCurrentBlock {
+		for _, m := range allTrueOtherPeerBlock {
+			if v == m {
+				possibleBlocks = append(possibleBlocks, v)
+			}
+		}
+	}
+	fmt.Println(possibleBlocks)
+	if len(possibleBlocks) == 0 {
+		return -1, false
+	}
+	return possibleBlocks[rand.Intn(len(possibleBlocks))], false
+}
+
+type TorrentProgresState struct {
+	db *badger.DB
+}
+
+func (t *TorrentProgresState) ViewPeerState(infohash, peerID []byte) SingleTorrentState {
+	key := append(infohash, peerID...)
+	var sts SingleTorrentState
+	t.db.View(
+		func(txn *badger.Txn) error {
+			val, err := txn.Get(key)
+			rawVal := make([]byte, val.ValueSize())
+			val.ValueCopy(rawVal)
+			sts.fromBytes(rawVal)
+			fmt.Printf("Infohash: %x :: PeerID: %x State: %+v\n", infohash, peerID, sts)
+			return err
+		})
+	return sts
+}
+
+func (t *TorrentProgresState) AddPeer(infohash, peerID []byte, blocks []bool) {
+	sts := SingleTorrentState{
+		Blocks:           blocks,
+		DownloadingBlock: -1,
+	}
+	raw, _ := json.Marshal(sts)
+	key := append(infohash, peerID...)
+	t.db.Update(
+		func(txn *badger.Txn) error {
+			err := txn.Set(key, raw)
+			err = txn.Commit()
+			return err
+		})
+}
+
+func (t *TorrentProgresState) StartDownload(infohash, currentPeerID, peerID []byte) int {
+	key := append(infohash, peerID...)
+	currentPeerKey := append(infohash, currentPeerID...)
+	var toDownload int
+	t.db.Update(
+		func(txn *badger.Txn) error {
+			val, _ := txn.Get(key)
+			rawVal := make([]byte, val.ValueSize())
+			val.ValueCopy(rawVal)
+			var sts SingleTorrentState
+			sts.fromBytes(rawVal)
+
+			val, _ = txn.Get(currentPeerKey)
+			rawVal = make([]byte, val.ValueSize())
+			val.ValueCopy(rawVal)
+			var currentSts SingleTorrentState
+			currentSts.fromBytes(rawVal)
+
+			fmt.Println(sts)
+			fmt.Println(currentSts)
+			toDownload, _ = nextBlock(currentSts.Blocks, sts.Blocks)
+
+			sts.DownloadingBlock = toDownload
+			raw, _ := json.Marshal(sts)
+			err := txn.Set(key, raw)
+			txn.Commit()
+			return err
+		})
+	return toDownload
+}
+
+func (t *TorrentProgresState) StopDownload(infohash, peerID []byte) {
+	key := append(infohash, peerID...)
+	t.db.Update(
+		func(txn *badger.Txn) error {
+			val, _ := txn.Get(key)
+			rawVal := make([]byte, val.ValueSize())
+			val.ValueCopy(rawVal)
+			var sts SingleTorrentState
+			sts.fromBytes(rawVal)
+
+			sts.DownloadingBlock = -1
+			raw, _ := json.Marshal(sts)
+			err := txn.Set(key, raw)
+			txn.Commit()
+			return err
+		})
+}
+
 type TorrentFile struct {
 	Filename    string
 	PieceCheck  []bool
@@ -95,14 +231,21 @@ func NewTorrentFile(filename string, length, pieceLength int, pieces []byte) Tor
 	}
 }
 
-func (tf *TorrentFile) ExecuteFileCheck() {
+func (tf *TorrentFile) ExecuteFileCheck() []bool {
+	aa := []bool{}
 	for idx, _ := range tf.Pieces {
-		tf.ExecutePieceCheck(idx)
+		a := tf.ExecutePieceCheck(idx)
+		aa = append(aa, a)
 	}
+	return aa
 }
 
 func (tf *TorrentFile) ExecutePieceCheck(idx int) bool {
-	ff, _ := os.Open(tf.Filename)
+	ff, err := os.Open(tf.Filename)
+	if err != nil {
+		fmt.Println("Error - unable to read file")
+		return false
+	}
 	defer ff.Close()
 
 	rawPieceContent := make([]byte, tf.PieceLength)
@@ -139,6 +282,30 @@ func main() {
 	httpListener, _ := os.LookupEnv("HTTP_PORT")
 	peerURL, _ := os.LookupEnv("PEER_URL")
 
+	opt := badger.DefaultOptions("").WithInMemory(true)
+	db, err := badger.Open(opt)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer db.Close()
+
+	aa := TorrentProgresState{
+		db: db,
+	}
+	// infohash := []byte("zzz")
+	// currentPeerID := []byte("p1")
+	// otherPeerID := []byte("p2")
+	// aa.AddPeer(infohash, currentPeerID, []bool{false, false, false})
+	// aa.AddPeer(infohash, otherPeerID, []bool{true, true, true})
+	// hoho := aa.StartDownload(infohash, currentPeerID, otherPeerID)
+	// fmt.Println(hoho)
+	// aa.ViewPeerState(infohash, currentPeerID)
+	// aa.ViewPeerState(infohash, otherPeerID)
+	// aa.StopDownload(infohash, otherPeerID)
+	// aa.ViewPeerState(infohash, currentPeerID)
+	// aa.ViewPeerState(infohash, otherPeerID)
+
 	peerID := generatePeerID()
 	slog.Info(fmt.Sprintf("PeerID: %x", peerID))
 
@@ -154,10 +321,10 @@ func main() {
 	}
 	defer listener.Close()
 
-	go handler(listener, tm)
+	go handler(listener, tm, aa, peerID)
 
-	// http.Handle("add-torrent", startHandler{})
-	http.Handle("/start", startHandler{PeerURL: peerURL, TM: tm})
+	http.Handle("/add-torrent", &addTorrentHandler{currentPeerID: peerID, tps: aa})
+	http.Handle("/start", startHandler{PeerURL: peerURL, TM: tm, TPS: aa})
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", httpListener), nil))
 
@@ -185,6 +352,7 @@ func main() {
 type startHandler struct {
 	PeerURL string
 	TM      TorrentMessage
+	TPS     TorrentProgresState
 }
 
 func (f startHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -221,8 +389,10 @@ func (f startHandler) BeginTorrent() {
 	conn.Read(rawPeerID)
 	fmt.Printf("Peer ID: %x\n", rawPeerID)
 
-	pieceID := 0
+	pieceID := -1
+	// rawContent := []byte{}
 	blockOffset := 0
+	// initialPieceState := slices.Repeat([]bool{false}, 377)
 
 	for {
 		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
@@ -277,6 +447,7 @@ func (f startHandler) BeginTorrent() {
 		if blockOffset == 1048576 {
 			pieceID += 1
 			blockOffset = 0
+			break
 		}
 	}
 }
@@ -297,33 +468,33 @@ type zzz struct {
 	Info         aaa        `bencode:"info"`
 }
 
-type addTorrentHandler struct{}
+type addTorrentHandler struct {
+	currentPeerID []byte
+	tps           TorrentProgresState
+}
 
-func (f addTorrentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (f *addTorrentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	slog.Info("add torrent handler")
 	defer slog.Info("end torrent handler")
 
-	yahoo, _ := os.ReadFile("zzz.torrent")
+	yahoo, _ := os.ReadFile("zzz3.torrent")
 
 	var zz zzz
-	bencode.Unmarshal(yahoo, &zz)
+	oo := bencode.Unmarshal(yahoo, &zz)
+	fmt.Println(oo)
 
 	val, _ := bencode.Marshal(zz.Info)
 	ss := sha1.New()
 	ss.Write(val)
-	oo := ss.Sum(nil)
-	fmt.Printf("%x\n", oo)
+	infohash := ss.Sum(nil)
 
-	tf := NewTorrentFile("hoho.mkv", zz.Info.Length, zz.Info.PieceLength, zz.Info.Pieces)
-	fmt.Println(tf.ExecutePieceCheck(0))
-
-	hoho := TorrentMessage{}
-	zpa := hoho.allConvertBitField(tf.PieceCheck)
-	fmt.Printf("%v\n", zpa)
-
+	tf := NewTorrentFile(zz.Info.Name, zz.Info.Length, zz.Info.PieceLength, zz.Info.Pieces)
+	vals := tf.ExecuteFileCheck()
+	f.tps.AddPeer(infohash, f.currentPeerID, vals)
+	fmt.Printf("Torrent Added. Infohash: %x. Pieces detected: %v\n", infohash, len(vals))
 }
 
-func handler(listener net.Listener, tm TorrentMessage) {
+func handler(listener net.Listener, tm TorrentMessage, tps TorrentProgresState, currentPeerID []byte) {
 	slog.Info("Start listener function")
 	for {
 		conn, err := listener.Accept()
@@ -331,11 +502,11 @@ func handler(listener net.Listener, tm TorrentMessage) {
 			// Handle error (e.g., connection closed)
 			continue
 		}
-		go handleConnection(conn, tm) // Handle connection in a new goroutine
+		go handleConnection(conn, tm, tps, currentPeerID) // Handle connection in a new goroutine
 	}
 }
 
-func handleConnection(conn net.Conn, tm TorrentMessage) {
+func handleConnection(conn net.Conn, tm TorrentMessage, tps TorrentProgresState, currentPeerID []byte) {
 	slog.Info("Wait for the handshake first. We are receiver section of the codebase")
 
 	// Skip the "handshake section"
@@ -355,14 +526,15 @@ func handleConnection(conn net.Conn, tm TorrentMessage) {
 	conn.Read(rawPeerID)
 	fmt.Printf("PeerID: %x\n", rawPeerID)
 
-	yahoo, _ := os.ReadFile("zzz.torrent")
+	yahoo, _ := os.ReadFile("zzz3.torrent")
 	var zz zzz
 	bencode.Unmarshal(yahoo, &zz)
 	tf := NewTorrentFile("hoho.mkv", zz.Info.Length, zz.Info.PieceLength, zz.Info.Pieces)
 
 	// Immediately return handshake
 	prefix := tm.Handshake()
-	bitfield := tm.Bitfield([]byte{255, 255, 255})
+	state := tps.ViewPeerState(rawInfohash, currentPeerID)
+	bitfield := tm.Bitfield(tm.allConvertBitField(state.Blocks))
 	fullMessage := append(prefix, bitfield...)
 	conn.Write(fullMessage)
 
@@ -633,7 +805,7 @@ func mainpp() {
 	c, _ := torrent.NewClient(nil)
 	defer c.Close()
 	log.Println("reading torrent file")
-	tt, _ := c.AddTorrentFromFile("zzz.torrent")
+	tt, _ := c.AddTorrentFromFile("zzz3.torrent")
 	// <-tt.GotInfo()
 	// if err != nil {
 	// 	log.Println(err)
