@@ -1,0 +1,18 @@
+version: '3.3'
+
+services:
+  prometheus:
+    image: prom/prometheus:v3.6.0
+    ports:
+      - 9090:9090
+    restart: always
+    volumes:
+      - type: bind
+        source: ./config/prometheus.yaml
+        target: /etc/prometheus/prometheus.yml
+        read_only: true
+  grafana:
+    image: grafana/grafana:12.2.0
+    ports:
+      - 3000:3000
+    restart: always

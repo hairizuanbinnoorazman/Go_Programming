@@ -1,4 +1,4 @@
-FROM jenkins/jenkins:2.451-jdk17
+FROM jenkins/jenkins:2.476-jdk21
 COPY plugins.txt /var/jenkins_home/plugins.txt
 RUN /bin/jenkins-plugin-cli -f /var/jenkins_home/plugins.txt
 COPY jenkins.yaml /var/jenkins_home/jenkins.yaml

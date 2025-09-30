@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 1m
+  evaluation_interval: 1m
+
+# A list of scrape configurations.
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to all metrics scraped from this config.
+  - job_name: 'jenkins'
+
+    static_configs:
+      - targets: ['jenkins:8080']
+        metrics_path: "/prometheus"

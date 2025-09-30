@@ -92,3 +92,5 @@ parameterized-scheduler
 yet-another-build-visualizer
 view-job-filters
 uno-choice
+metrics
+prometheus
