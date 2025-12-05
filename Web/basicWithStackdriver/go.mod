@@ -8,7 +8,7 @@ require (
 	github.com/TV4/logrus-stackdriver-formatter v0.1.0
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/google/go-cmp v0.5.0 // indirect
-	github.com/sirupsen/logrus v1.6.0
+	github.com/sirupsen/logrus v1.8.3
 	go.opencensus.io v0.22.4
 	golang.org/x/text v0.3.8 // indirect
 	google.golang.org/api v0.28.0 // indirect
