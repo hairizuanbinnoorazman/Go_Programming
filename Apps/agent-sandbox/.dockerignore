@@ -1,0 +1,5 @@
+.git
+.gitignore
+bin
+agent-sandbox-demo
+*.md

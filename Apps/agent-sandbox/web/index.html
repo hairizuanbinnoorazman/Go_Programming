@@ -1,0 +1,94 @@
+{{define "index.html"}}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="refresh" content="10">
+  <title>Agent Sandbox GKE Demo</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b1220; --panel:#121c2e; --line:#293750; --text:#e8eef8; --muted:#96a7c2; --blue:#62a8ff; --red:#ff7d7d; --green:#69d59a; }
+    * { box-sizing:border-box } body { margin:0; background:var(--bg); color:var(--text); font:14px/1.45 system-ui,sans-serif }
+    main { width:min(1500px,96vw); margin:28px auto 60px } h1 { margin:0 0 4px; font-size:28px } h2 { margin:0 0 14px; font-size:18px }
+    .muted { color:var(--muted) } .grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:20px 0 }
+    .card,.section { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px } .section { margin-top:16px; overflow:auto }
+    .notice { margin:14px 0; padding:12px 14px; border-radius:8px; background:#143523; color:#b8f3d1 } .notice.error { background:#421f25; color:#ffc0c8 }
+    table { width:100%; border-collapse:collapse; white-space:nowrap } th,td { text-align:left; padding:10px 9px; border-bottom:1px solid var(--line); vertical-align:top } th { color:var(--muted); font-size:12px; text-transform:uppercase }
+    code { color:#bcd8ff } form { display:inline-flex; gap:6px; margin:2px } input { min-width:220px; border:1px solid var(--line); border-radius:6px; background:#0c1524; color:var(--text); padding:9px }
+    button { border:1px solid #3c5680; border-radius:6px; background:#1a3154; color:white; padding:7px 10px; cursor:pointer } button:hover { background:#254573 }
+    button.warn { border-color:#754d25; background:#543619 } button.danger { border-color:#7b343c; background:#57242b }
+    .actions { min-width:470px; white-space:normal } .log { max-width:440px; white-space:normal; overflow-wrap:anywhere; color:#bcd8ff }
+    @media (max-width:900px) { .grid { grid-template-columns:1fr } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Agent Sandbox GKE Demo</h1>
+  <div class="muted">Namespace <code>{{.Namespace}}</code> · updated {{.UpdatedAt}} · auto-refresh 10s</div>
+  {{if .Message}}<div class="notice">{{.Message}}</div>{{end}}
+  {{if .Error}}<div class="notice error">{{.Error}}</div>{{end}}
+
+  <div class="grid">
+    <div class="card"><strong>Sandbox template</strong><br><code>{{.Template}}</code></div>
+    <div class="card"><strong>Warm pool</strong><br><code>{{.WarmPool}}</code></div>
+    <div class="card">
+      <strong>Create sandbox claim</strong><br>
+      <form method="post" action="/actions">
+        <input type="hidden" name="action" value="create">
+        <input name="name" placeholder="optional claim name">
+        <button type="submit">Create</button>
+      </form>
+    </div>
+  </div>
+
+  <section class="section">
+    <h2>Sandbox claims</h2>
+    <p class="muted">Suspend sets replicas to zero without preserving process memory. Snapshot + suspend checkpoints memory/rootfs first. Restore latest resumes a suspended sandbox or recreates its running Pod.</p>
+    <table>
+      <thead><tr><th>Claim</th><th>Sandbox</th><th>Ready</th><th>Replicas</th><th>Snapshots</th><th>Age</th><th>Actions</th></tr></thead>
+      <tbody>
+      {{range .Claims}}
+        <tr>
+          <td><code>{{.Name}}</code></td><td><code>{{.Sandbox}}</code></td><td>{{.Ready}}</td><td>{{.Replicas}}</td><td>{{.SnapshotNum}}</td><td>{{.CreatedAt}}</td>
+          <td class="actions">
+            {{if .Sandbox}}
+            <form method="post" action="/actions"><input type="hidden" name="action" value="suspend"><input type="hidden" name="name" value="{{.Sandbox}}"><button class="warn">Suspend</button></form>
+            <form method="post" action="/actions"><input type="hidden" name="action" value="resume"><input type="hidden" name="name" value="{{.Sandbox}}"><button>Resume</button></form>
+            <form method="post" action="/actions"><input type="hidden" name="action" value="snapshot"><input type="hidden" name="name" value="{{.Sandbox}}"><button>Snapshot memory</button></form>
+            <form method="post" action="/actions"><input type="hidden" name="action" value="snapshot-suspend"><input type="hidden" name="name" value="{{.Sandbox}}"><button class="warn">Snapshot + suspend</button></form>
+            <form method="post" action="/actions"><input type="hidden" name="action" value="restore"><input type="hidden" name="name" value="{{.Sandbox}}"><button>Restore latest</button></form>
+            {{end}}
+            <form method="post" action="/actions" onsubmit="return confirm('Destroy claim {{.Name}} and its sandbox?')"><input type="hidden" name="action" value="destroy"><input type="hidden" name="name" value="{{.Name}}"><button class="danger">Destroy</button></form>
+          </td>
+        </tr>
+      {{else}}<tr><td colspan="7" class="muted">No sandbox claims.</td></tr>{{end}}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="section">
+    <h2>Live pods in {{.Namespace}}</h2>
+    <table>
+      <thead><tr><th>Pod</th><th>Phase</th><th>Ready</th><th>Runtime</th><th>IP</th><th>Node</th><th>Age</th><th>Memory/last log output</th><th>Restore status</th></tr></thead>
+      <tbody>
+      {{range .Pods}}
+        <tr><td><code>{{.Name}}</code></td><td>{{.Phase}}</td><td>{{.Ready}}</td><td>{{.Runtime}}</td><td>{{.IP}}</td><td>{{.Node}}</td><td>{{.Age}}</td><td class="log">{{.LastOutput}}</td><td class="log">{{.Restored}}</td></tr>
+      {{else}}<tr><td colspan="9" class="muted">No live pods.</td></tr>{{end}}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="section">
+    <h2>GKE PodSnapshots</h2>
+    <table>
+      <thead><tr><th>Snapshot</th><th>Source pod</th><th>Status</th><th>Age</th><th>Storage</th></tr></thead>
+      <tbody>
+      {{range .Snapshots}}<tr><td><code>{{.Name}}</code></td><td>{{.Pod}}</td><td>{{.Status}}</td><td>{{.CreatedAt}}</td><td class="log">{{.Storage}}</td></tr>
+      {{else}}<tr><td colspan="5" class="muted">No snapshots.</td></tr>{{end}}
+      </tbody>
+    </table>
+  </section>
+</main>
+</body>
+</html>
+{{end}}
