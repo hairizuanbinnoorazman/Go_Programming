@@ -6,6 +6,10 @@ This is an experiment harness, not a production starter. Local Docker Compose is
 
 See the standalone [before-and-after optimization report](before-after-report.html) for a visual explanation of the measured query-plan improvement.
 
+See [uuid-learnings.md](uuid-learnings.md) for the runnable UUIDv4-versus-UUIDv7 study, including keyset and deep `OFFSET` pagination results on 250,000 rows per table.
+
+See [mvcc-learnings.md](mvcc-learnings.md) for the measured MVCC/autovacuum/bloat results and the end-to-end Google Compute Engine experiment guide.
+
 ## What is included
 
 - JSON CRUD API built with `net/http` and `pgxpool`
@@ -50,7 +54,7 @@ curl -sS -X PUT -H 'Content-Type: application/json' -d '{"name":"Acme Ltd"}' \
 curl -i -X DELETE "http://127.0.0.1:8080/v1/companies/$company_id"
 ```
 
-All list endpoints accept `limit` (1–500) and `offset`. Inventory also accepts `company_id`. Deleting a company sets its users' `company_id` to null and cascades deletion of its inventory.
+All ordinary resource list endpoints accept `limit` (1–500) and `offset`. Inventory also accepts `company_id`. The study endpoint at `/v1/uuid-study/{v4|v7}` additionally supports `strategy=keyset` and an `after` cursor. Deleting a company sets its users' `company_id` to null and cascades deletion of its inventory.
 
 ## Load generator
 

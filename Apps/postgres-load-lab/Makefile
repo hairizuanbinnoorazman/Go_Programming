@@ -1,4 +1,4 @@
-.PHONY: build test vet compose-up compose-down smoke load
+.PHONY: build test vet compose-up compose-down smoke load uuid-study
 
 build:
 	GOWORK=off go build ./cmd/server ./cmd/loadgen
@@ -20,3 +20,6 @@ smoke:
 
 load:
 	GOWORK=off go run ./cmd/loadgen --duration 30s --workers 20 --rate 100
+
+uuid-study:
+	GOWORK=off go run ./cmd/uuidstudy -rows 250000 -runs 50

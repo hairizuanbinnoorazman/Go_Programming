@@ -1,0 +1,13 @@
+\set row_id random(1, 200000)
+BEGIN;
+UPDATE mvcc_healthy
+SET version = version + 1,
+    payload = md5(version::text || id::text),
+    updated_at = clock_timestamp()
+WHERE id = :row_id;
+UPDATE mvcc_unvacuumed
+SET version = version + 1,
+    payload = md5(version::text || id::text),
+    updated_at = clock_timestamp()
+WHERE id = :row_id;
+COMMIT;

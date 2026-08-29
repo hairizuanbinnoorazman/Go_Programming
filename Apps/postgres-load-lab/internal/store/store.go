@@ -45,6 +45,19 @@ type Inventory struct {
 	UpdatedAt  time.Time `json:"updated_at"`
 }
 
+type UUIDStudyItem struct {
+	ID        uuid.UUID `json:"id"`
+	Payload   string    `json:"payload"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type UUIDStudyVersion string
+
+const (
+	UUIDStudyV4 UUIDStudyVersion = "v4"
+	UUIDStudyV7 UUIDStudyVersion = "v7"
+)
+
 type Store struct {
 	Pool          *pgxpool.Pool
 	timeout       time.Duration
@@ -250,6 +263,45 @@ func (s *Store) DeleteInventory(ctx context.Context, id uuid.UUID) error {
 		return ErrNotFound
 	}
 	return err
+}
+
+// ListUUIDStudy deliberately orders by the UUID primary key. For v7 this is
+// approximately creation order; for v4 it is a stable but random order.
+func (s *Store) ListUUIDStudy(ctx context.Context, version UUIDStudyVersion, limit, offset int, after *uuid.UUID) ([]UUIDStudyItem, error) {
+	defer s.observe("uuid_study_" + string(version) + "_list")()
+	ctx, cancel := s.ctx(ctx)
+	defer cancel()
+
+	var table string
+	switch version {
+	case UUIDStudyV4:
+		table = "uuid_study_v4"
+	case UUIDStudyV7:
+		table = "uuid_study_v7"
+	default:
+		return nil, fmt.Errorf("unsupported UUID study version %q", version)
+	}
+
+	query := `SELECT id,payload,created_at FROM ` + table + ` ORDER BY id LIMIT $1 OFFSET $2`
+	args := []any{limit, offset}
+	if after != nil {
+		query = `SELECT id,payload,created_at FROM ` + table + ` WHERE id > $1 ORDER BY id LIMIT $2`
+		args = []any{*after, limit}
+	}
+	rows, err := s.Pool.Query(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := make([]UUIDStudyItem, 0, limit)
+	for rows.Next() {
+		var item UUIDStudyItem
+		if err := rows.Scan(&item.ID, &item.Payload, &item.CreatedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+	return items, rows.Err()
 }
 
 func mapErr(err error) error {

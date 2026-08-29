@@ -51,6 +51,7 @@ func New(s *store.Store, log *slog.Logger, reg *prometheus.Registry) http.Handle
 	mux.HandleFunc("GET /v1/inventory/{id}", a.getInventory)
 	mux.HandleFunc("PUT /v1/inventory/{id}", a.updateInventory)
 	mux.HandleFunc("DELETE /v1/inventory/{id}", a.deleteInventory)
+	mux.HandleFunc("GET /v1/uuid-study/{version}", a.listUUIDStudy)
 	return a.instrument(mux)
 }
 
@@ -277,6 +278,69 @@ func validInventory(w http.ResponseWriter, in inventoryInput) bool {
 		return false
 	}
 	return required(w, in.SKU, "sku") && required(w, in.Name, "name")
+}
+
+type uuidStudyPage struct {
+	Items      []store.UUIDStudyItem `json:"items"`
+	Strategy   string                `json:"strategy"`
+	NextCursor string                `json:"next_cursor,omitempty"`
+	NextOffset *int                  `json:"next_offset,omitempty"`
+}
+
+func (a *API) listUUIDStudy(w http.ResponseWriter, r *http.Request) {
+	version := store.UUIDStudyVersion(r.PathValue("version"))
+	if version != store.UUIDStudyV4 && version != store.UUIDStudyV7 {
+		writeError(w, http.StatusBadRequest, "version must be v4 or v7")
+		return
+	}
+	limit, offset, ok := page(w, r)
+	if !ok {
+		return
+	}
+	strategy := r.URL.Query().Get("strategy")
+	if strategy == "" {
+		strategy = "keyset"
+	}
+	if strategy != "keyset" && strategy != "offset" {
+		writeError(w, http.StatusBadRequest, "strategy must be keyset or offset")
+		return
+	}
+	var after *uuid.UUID
+	if raw := r.URL.Query().Get("after"); raw != "" {
+		if strategy != "keyset" {
+			writeError(w, http.StatusBadRequest, "after is only valid with keyset strategy")
+			return
+		}
+		id, err := uuid.Parse(raw)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "after must be a UUID")
+			return
+		}
+		after = &id
+	}
+	if strategy == "keyset" && offset != 0 {
+		writeError(w, http.StatusBadRequest, "offset is only valid with offset strategy")
+		return
+	}
+
+	// Fetch one extra row so continuation fields are emitted only when another
+	// page exists.
+	items, err := a.store.ListUUIDStudy(r.Context(), version, limit+1, offset, after)
+	if err != nil {
+		respond(w, nil, err, 0)
+		return
+	}
+	result := uuidStudyPage{Items: items, Strategy: strategy}
+	if len(items) > limit {
+		result.Items = items[:limit]
+		if strategy == "keyset" {
+			result.NextCursor = result.Items[len(result.Items)-1].ID.String()
+		} else {
+			next := offset + limit
+			result.NextOffset = &next
+		}
+	}
+	writeJSON(w, http.StatusOK, result)
 }
 
 func decode(w http.ResponseWriter, r *http.Request, dst any) bool {
