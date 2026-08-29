@@ -1,0 +1,25 @@
+[Unit]
+Description=PostgreSQL Load Lab API
+After=network-online.target postgresql.service
+Wants=network-online.target
+Requires=postgresql.service
+
+[Service]
+Type=simple
+User=loadlab
+Group=loadlab
+EnvironmentFile=/etc/loadlab/app.env
+WorkingDirectory=/opt/loadlab
+ExecStart=/opt/loadlab/bin/loadlab-server
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=15
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/loadlab
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

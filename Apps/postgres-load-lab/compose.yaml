@@ -1,0 +1,44 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: loadlab
+      POSTGRES_USER: loadlab
+      POSTGRES_PASSWORD: loadlab
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_stat_statements
+      - -c
+      - pg_stat_statements.track=all
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U loadlab -d loadlab"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+    ports:
+      - "127.0.0.1:5432:5432"
+
+  app:
+    build: .
+    environment:
+      APP_ADDR: :8080
+      DATABASE_URL: postgres://loadlab:loadlab@postgres:5432/loadlab?sslmode=disable
+      DB_MAX_CONNS: 20
+      DB_MIN_CONNS: 2
+      MIGRATIONS_DIR: /app/migrations
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8080/readyz"]
+      interval: 3s
+      timeout: 2s
+      retries: 20
+    ports:
+      - "127.0.0.1:8080:8080"
+
+volumes:
+  postgres-data:

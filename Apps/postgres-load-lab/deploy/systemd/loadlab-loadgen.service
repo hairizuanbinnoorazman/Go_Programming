@@ -1,0 +1,16 @@
+[Unit]
+Description=PostgreSQL Load Lab traffic generator
+After=loadlab.service
+Requires=loadlab.service
+
+[Service]
+Type=oneshot
+User=loadlab
+Group=loadlab
+EnvironmentFile=/etc/loadlab/loadgen.env
+ExecStart=/opt/loadlab/bin/loadlab-loadgen --target ${TARGET} --duration ${DURATION} --workers ${WORKERS} --rate ${RATE} --seed-companies ${SEED_COMPANIES} --output /var/lib/loadlab/loadgen-result.json
+StateDirectory=loadlab
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true

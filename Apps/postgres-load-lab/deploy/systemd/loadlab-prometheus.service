@@ -1,0 +1,18 @@
+[Unit]
+Description=Prometheus for PostgreSQL Load Lab
+After=network-online.target loadlab.service loadlab-postgres-exporter.service prometheus-node-exporter.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=prometheus
+ExecStart=/usr/bin/prometheus --config.file=/etc/loadlab/prometheus.yml --storage.tsdb.path=/var/lib/prometheus/loadlab --storage.tsdb.retention.time=15d --web.listen-address=127.0.0.1:9090
+Restart=on-failure
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/prometheus
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,12 @@
+# Measure first. Apply only the settings justified by the experiment and restart.
+shared_preload_libraries = 'pg_stat_statements'
+pg_stat_statements.track = all
+track_io_timing = on
+log_min_duration_statement = 250ms
+
+# Starting points for a dedicated 2 GiB lab host; these are not universal values.
+# shared_buffers = 512MB
+# effective_cache_size = 1536MB
+# work_mem = 8MB
+# maintenance_work_mem = 128MB
+# max_connections = 100
